@@ -25,7 +25,9 @@
 
 - `scoring.mode == "structural"`（testnet run）→ **拒收**（fail loud）：D1 规定正式跑分只在
   mock，结构评分结果混入 leaderboard 即数据事故；
-- run 标签 = `meta.json` 的 `model`（缺省用目录名）。
+- run 标签 = `meta.json` 的 `model`（缺省用目录名）；同名标签自动唯一化（`x`→`x#2`），
+  SVG 文件名 slug 冲突自动加后缀，调色板超 7 个 run 循环使用——多 run 对比不得静默
+  覆盖/丢失（M3 审查修复）。
 
 ## 3. 雷达图（AC-12b，KICKOFF 9.3 六维）
 

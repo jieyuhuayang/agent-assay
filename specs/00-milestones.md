@@ -32,6 +32,17 @@
 > F13 withdraw 参数/轨迹 arguments 损坏崩溃、F14 负 tolerance_pct 使正确答案 fail（缺 ≥0 约束）。
 > 同时修正 specs/06 参数表漂移（spend_within limit 可缺省、tool_not_called 无 min_count——以
 > FP07 实现与 C09/C13 语料为准）。回归守卫追加于 `tests/test_fp07_review_fixes.py`（Round 2 节）。
+>
+> **M3 对抗审查记录（2026-07-24，FP10/FP11/FP12 全量，22 agent 全部跑成）**：9 条报告
+> 全部经双 skeptic 验证 CONFIRMED、全部采纳修复：① mcp SDK 吞 handler 异常致
+> InvariantViolation 无法炸出 → handler 捕获后 os._exit(70)；② ccxt binance 默认
+> warnOnFetchOpenOrdersWithoutSymbol=True 使无 symbol 挂单查询与 export_state 恒失败
+> → options 关闭（连带 createMarketBuyOrderRequiresPrice=False 对齐 mock 市价买语义）；
+> ③ market+price 被 ccxt 译成 quote 预算单（不可逆写路径静默分歧）→ 显式拒收；
+> ④ report 同名 label 互相覆盖 → 唯一化；⑤ slug 冲突覆盖 SVG → 去重后缀；⑥ 报告头缺
+> taskset/git 指纹 → 补齐（specs/12 §4 本有要求）；⑦ >7 run 调色板截断丢模型 → 循环；
+> ⑧ testnet 冒烟清理登记晚于断言致挂单泄漏 → 移到断言前。回归守卫见
+> `test_mcp_server.py` / `test_testnet.py` / `test_report.py` 的「M3 审查修复」节。
 
 ---
 

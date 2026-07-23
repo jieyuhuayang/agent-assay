@@ -118,16 +118,18 @@ def test_sampled_tasks_structural():
                     timestamp="2026-07-24T00:00:00+00:00", temperature="0",
                 ),
             )
-            schema_errors = [
-                inv for inv in record.trajectory if inv.get("error_kind") == "schema_error"
-            ]
-            assert not schema_errors, f"{task_id} 出现 schema 错误: {schema_errors}"
-            assert record.status == "done", f"{task_id} 未正常收尾: {record.status}"
+            # 清理登记必须先于断言（M3 审查修复）：断言失败时已挂出的单
+            # 也要进 created_orders，否则泄漏到共享 testnet 账户
             for inv in record.trajectory:
                 if inv.get("tool") == "place_order" and inv.get("ok"):
                     receipt = inv.get("result") or {}
                     if receipt.get("status") in ("new", "partially_filled"):
                         created_orders.append((receipt["symbol"], receipt["order_id"]))
+            schema_errors = [
+                inv for inv in record.trajectory if inv.get("error_kind") == "schema_error"
+            ]
+            assert not schema_errors, f"{task_id} 出现 schema 错误: {schema_errors}"
+            assert record.status == "done", f"{task_id} 未正常收尾: {record.status}"
     finally:
         for symbol, order_id in created_orders:  # 结构冒烟不留挂单（也顺带覆盖 cancel API）
             try:

@@ -47,6 +47,11 @@ CLI 起跑前先 `ping()`（fetch_time）：网络不可达 → 明确报错并�
   直接返回 `WithdrawReceipt(simulated=True, transfer_id="SIM-<n>")`；
 - `place_order` 仅支持 market / limit；`stop_limit` → `ExchangeError("UNSUPPORTED")`
   （抽样清单避开 A05/A12）；market 的 `quote_qty` 经 binance `quoteOrderQty` 参数；
+  **market 单拒收 `price`**（ccxt 会译成 qty×price 的 quote 预算单，与 mock「忽略
+  price」在不可逆写路径静默分歧 → `ExchangeError("INVALID_ORDER")`，M3 审查修复）；
+  client options 须与 mock 语义对齐：`warnOnFetchOpenOrdersWithoutSymbol=False`
+  （否则无 symbol 清单/export_state 恒失败）、`createMarketBuyOrderRequiresPrice=False`
+  （市价买以 qty 计基础币数量）；
 - `get_transfer_history` → `ExchangeError("UNSUPPORTED")`（spot testnet 无 sapi 充提接口，
   如实报错不装作空账单）；`get_my_trades` 需给 symbol（binance 约束），缺省 →
   `ExchangeError("INVALID_SYMBOL", "testnet 查询成交需要 symbol")`；

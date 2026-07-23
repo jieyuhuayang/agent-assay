@@ -63,7 +63,10 @@ serve(env, mandate, *, auto_approve=False) -> None  # 阻塞运行 stdio server�
   `{"ok": bool, "result": Any, "error_code": str|null, "error_kind": str|null,
   "error_message": str|null}`（即 `ToolInvocation` 去掉 tool/arguments/irreversible——
   前两者客户端自知，后者是评分侧元数据不外泄语义）。
-  `InvariantViolation` 例外：环境账本损坏必须炸出（与 registry 同款护栏）。
+  `InvariantViolation` 例外：环境账本损坏必须炸出（与 registry 同款护栏）——mcp SDK 的
+  call_tool wrapper 会把 handler 的一切 Exception 吞成 isError 响应后继续服务，上抛不可行；
+  handler 捕获后写 stderr 并 `os._exit(70)` 终止进程（M3 审查修复，守护测试
+  `test_mcp_server.py::test_invariant_violation_terminates_server`）。
 - server 元数据：name=`agent-assay`，instructions=渲染后的 mandate prompt。
 - `report` 工具在 MCP 模式无 episode 语义，行为不变（返回 `{"status":..., "recorded": true}`），
   文档里注明它在 MCP 模式只是回声。
