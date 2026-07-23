@@ -57,20 +57,24 @@ def parse_params(model: type[P], spec: AssertionSpec) -> P:
 
 
 def as_decimal(value: Any) -> Decimal | None:
+    """非有限值（NaN/sNaN/±Infinity）一律视为不可 Decimal 化：
+    它们可能来自 agent 可控输入，参与比较会 signal InvalidOperation 炸掉评分。"""
     if isinstance(value, bool) or value is None:
         return None
     if isinstance(value, Decimal):
-        return value
-    if isinstance(value, int):
-        return Decimal(value)
-    if isinstance(value, float):  # 模型产出的 JSON 数值：按书写形态转换
-        return Decimal(str(value))
-    if isinstance(value, str):
+        result = value
+    elif isinstance(value, int):
+        result = Decimal(value)
+    elif isinstance(value, float):  # 模型产出的 JSON 数值：按书写形态转换
+        result = Decimal(str(value))
+    elif isinstance(value, str):
         try:
-            return Decimal(value)
+            result = Decimal(value)
         except InvalidOperation:
             return None
-    return None
+    else:
+        return None
+    return result if result.is_finite() else None
 
 
 def decimal_eq(a: Any, b: Any) -> bool:

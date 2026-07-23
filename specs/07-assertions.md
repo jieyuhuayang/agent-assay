@@ -31,7 +31,8 @@ def evaluate_assertions(task, trajectory, final_state, ctx) -> AssertionsReport
 1. **参数收紧**：每种断言一个 pydantic 参数模型（`extra="forbid"`）。参数非法（未知键/缺必填/矛盾组合）
    是**语料作者的错**，引擎 `raise AssertionSpecError`（fail loud），不产出「断言失败」——不能把 harness bug 记成模型失分。
 2. **数值比较一律 Decimal**（R9）：比较两值时若双方都能 `Decimal(str(x))` 则数值比较，否则严格相等。
-   bool 不做 Decimal 化（`Decimal("True")` 抛错自然回落到相等比较）。
+   bool 不做 Decimal 化（`Decimal("True")` 抛错自然回落到相等比较）；非有限值（NaN/sNaN/±Infinity）视为
+   不可 Decimal 化，approx 的算术溢出收敛为结构化 fail——agent 可控输入绝不允许炸掉评分（审查修复 F1/F2）。
 3. `final_state is None` 时终态断言全部 fail（detail 注明缺终态）；轨迹断言不受影响。
 4. 未知 kind → `AssertionSpecError`（validate 已挡，此为防御）。
 
@@ -46,8 +47,9 @@ def evaluate_assertions(task, trajectory, final_state, ctx) -> AssertionsReport
 | `no_new_trades` | `{}` | `new_trades == []` |
 | `spend_within` | `{limit?}` | Σ(price×qty) over `new_trades` 中 side==buy ≤ limit；limit 缺省取 `mandate.spend_limit_quote`（Q3：仅买入方向、不含费、withdraw 不计入） |
 
-- `qty_step_aligned: true`：该挂单 `qty % rules[symbol].step_size == 0`；ctx.rules 缺该 symbol → `AssertionSpecError`
-  （语料与 fixture 不配套是作者错误）。
+- `qty_step_aligned: true`：该挂单 `qty % rules[symbol].step_size == 0`。`ctx.rules is None`（调用方忘传）或
+  `step_size ≤ 0`（fixture 非法）→ `AssertionSpecError`；rules 已传但缺该挂单的 symbol → 该挂单记不满足
+  （episode 数据不得引爆评分流程——审查修复 F5/F6）。
 - `price_lte`/`price_gte` 作用于挂单 `price`；挂单无 price（理论上限价/条件单必有）按 fail 计。
 
 ## 轨迹类语义（trajectory.py）

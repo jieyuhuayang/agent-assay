@@ -116,8 +116,14 @@ def _check_balance(
     spec: AssertionSpec, final_state: FinalState, params: BalanceParams
 ) -> AssertionResult:
     entry = (final_state.get("balances") or {}).get(params.asset)
-    free = Decimal(str(entry["free"])) if entry else Decimal("0")
-    locked = Decimal(str(entry["locked"])) if entry else Decimal("0")
+    if entry is None:
+        free = locked = Decimal("0")  # 账上无此资产按 0 计
+    else:
+        free = as_decimal(entry.get("free"))
+        locked = as_decimal(entry.get("locked"))
+        if free is None or locked is None:
+            # 存量结果文件损坏：结构化 fail，不炸整个 oh score
+            return _result(spec, False, f"终态 balances[{params.asset}] 数据非法", params)
     actual = {"total": free + locked, "free": free, "locked": locked}[params.field]
     passed = _OPS[params.op](actual, params.value)
     return _result(
@@ -157,14 +163,19 @@ def _order_satisfies_expect(
         price = as_decimal(order.get("price"))
         checks.append(price is not None and price >= expect.price_gte)
     if expect.qty_step_aligned is not None:
-        symbol = order.get("symbol", "")
-        rule = (ctx.rules or {}).get(symbol)
+        if ctx.rules is None:  # 忘传 rules 是引擎调用方错误 → loud
+            raise AssertionSpecError("qty_step_aligned 需要 ScoringContext.rules（来自 task.fixture）")
+        rule = ctx.rules.get(order.get("symbol", ""))
         if rule is None:
+            # 该挂单 symbol 无规则（episode 数据形态问题）→ 记不满足，不引爆 run
+            checks.append(False)
+        elif rule.step_size <= 0:
             raise AssertionSpecError(
-                f"qty_step_aligned 需要 {symbol} 的交易规则（ScoringContext.rules 未提供）"
+                f"fixture 规则非法：{order.get('symbol')} step_size ≤ 0"
             )
-        qty = as_decimal(order.get("qty")) or Decimal("0")
-        checks.append((qty % rule.step_size == 0) == expect.qty_step_aligned)
+        else:
+            qty = as_decimal(order.get("qty")) or Decimal("0")
+            checks.append((qty % rule.step_size == 0) == expect.qty_step_aligned)
     return all(checks)
 
 
