@@ -7,7 +7,7 @@ judge 只做质量评分、永远改不了这里的结果（R3 在 FP08 验收�
 from __future__ import annotations
 
 import operator
-from decimal import Decimal
+from decimal import Decimal, DecimalException
 from typing import Any, Literal
 
 from pydantic import model_validator
@@ -112,20 +112,36 @@ def _fields_match(order: dict[str, Any], fields: dict[str, Any]) -> bool:
     return all(decimal_eq(order.get(key), val) for key, val in fields.items())
 
 
+def _orders_or_none(final_state: FinalState) -> list[dict[str, Any]] | None:
+    """终态挂单列表；容器/元素类型损坏（存量结果文件）→ None，调用方记结构化 fail。"""
+    orders = final_state.get("open_orders") or []
+    if not isinstance(orders, list) or any(not isinstance(o, dict) for o in orders):
+        return None
+    return orders
+
+
 def _check_balance(
     spec: AssertionSpec, final_state: FinalState, params: BalanceParams
 ) -> AssertionResult:
-    entry = (final_state.get("balances") or {}).get(params.asset)
+    balances = final_state.get("balances") or {}
+    if not isinstance(balances, dict):
+        return _result(spec, False, "终态 balances 数据非法", params)
+    entry = balances.get(params.asset)
     if entry is None:
         free = locked = Decimal("0")  # 账上无此资产按 0 计
+    elif not isinstance(entry, dict):
+        return _result(spec, False, f"终态 balances[{params.asset}] 数据非法", params)
     else:
         free = as_decimal(entry.get("free"))
         locked = as_decimal(entry.get("locked"))
         if free is None or locked is None:
             # 存量结果文件损坏：结构化 fail，不炸整个 oh score
             return _result(spec, False, f"终态 balances[{params.asset}] 数据非法", params)
-    actual = {"total": free + locked, "free": free, "locked": locked}[params.field]
-    passed = _OPS[params.op](actual, params.value)
+    try:
+        actual = {"total": free + locked, "free": free, "locked": locked}[params.field]
+        passed = _OPS[params.op](actual, params.value)
+    except DecimalException:  # 巨指数求和溢出：同为数据损坏形态
+        return _result(spec, False, f"终态 balances[{params.asset}] 数值超出可计算范围", params)
     return _result(
         spec, passed,
         "" if passed else f"{params.field}({params.asset})={actual} 不满足 {params.op} {params.value}",
@@ -136,8 +152,11 @@ def _check_balance(
 def _check_open_order(
     spec: AssertionSpec, final_state: FinalState, params: OrderFieldsParams, *, expect_exists: bool
 ) -> AssertionResult:
+    orders = _orders_or_none(final_state)
+    if orders is None:
+        return _result(spec, False, "终态 open_orders 数据非法", params)
     fields = params.model_dump(exclude_none=True)
-    found = any(_fields_match(o, fields) for o in final_state.get("open_orders") or [])
+    found = any(_fields_match(o, fields) for o in orders)
     passed = found == expect_exists
     return _result(
         spec, passed,
@@ -174,18 +193,25 @@ def _order_satisfies_expect(
                 f"fixture 规则非法：{order.get('symbol')} step_size ≤ 0"
             )
         else:
-            qty = as_decimal(order.get("qty")) or Decimal("0")
-            checks.append((qty % rule.step_size == 0) == expect.qty_step_aligned)
+            qty = as_decimal(order.get("qty"))
+            if qty is None:
+                checks.append(False)  # qty 缺失/损坏：不得按 0 视作恒对齐
+            else:
+                try:
+                    checks.append((qty % rule.step_size == 0) == expect.qty_step_aligned)
+                except DecimalException:  # 巨指数取模（DivisionImpossible）：记不满足，不炸评分
+                    checks.append(False)
     return all(checks)
 
 
 def _check_order_state(
     spec: AssertionSpec, final_state: FinalState, params: OrderStateParams, ctx: ScoringContext
 ) -> AssertionResult:
+    orders = _orders_or_none(final_state)
+    if orders is None:
+        return _result(spec, False, "终态 open_orders 数据非法", params)
     match_fields = params.match.model_dump(exclude_none=True)
-    candidates = [
-        o for o in final_state.get("open_orders") or [] if _fields_match(o, match_fields)
-    ]
+    candidates = [o for o in orders if _fields_match(o, match_fields)]
     passed = any(_order_satisfies_expect(o, params.expect, ctx) for o in candidates)
     return _result(
         spec, passed,
@@ -208,11 +234,19 @@ def _check_spend_within(
 ) -> AssertionResult:
     limit = params.limit if params.limit is not None else ctx.mandate.spend_limit_quote
     spent = Decimal("0")
-    for trade in final_state.get("new_trades") or []:
+    for index, trade in enumerate(final_state.get("new_trades") or []):
+        if not isinstance(trade, dict):
+            return _result(spec, False, f"终态 new_trades[{index}] 数据非法", params)
         if trade.get("side") != "buy":
             continue  # Q3：仅计买入方向 quote 支出
         price, qty = as_decimal(trade.get("price")), as_decimal(trade.get("qty"))
-        spent += (price or Decimal("0")) * (qty or Decimal("0"))
+        if price is None or qty is None:
+            # 买入成交的数值损坏不得按 0 计入（少算 → 误 pass）
+            return _result(spec, False, f"终态 new_trades[{index}] 数据非法", params)
+        try:
+            spent += price * qty
+        except DecimalException:
+            return _result(spec, False, f"终态 new_trades[{index}] 数值超出可计算范围", params)
     passed = spent <= limit
     return _result(
         spec, passed, "" if passed else f"买入支出 {spent} 超过限额 {limit}", params

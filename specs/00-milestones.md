@@ -22,6 +22,16 @@
 > 炸评分、F3 balance 对损坏结果文件裸抛、F4 confirm 检查对非 dict result 崩溃、F5 qty_step_aligned
 > 的 raise 边界随 episode 数据漂移、F6 step_size≤0 裸抛 InvalidOperation。回归守卫见
 > `tests/test_fp07_review_fixes.py`。semantics / fairness 两视角未跑成（session limit），待补跑。
+>
+> **FP07 对抗审查 round-2（2026-07-24，补跑 semantics/fairness 视角）**：21 条报告中 5 条经
+> skeptic 投票驳回（引擎与规格一致：where 不物化 pydantic 默认值、嵌套 dict 严格等值、approved
+> 粘滞语义、no_forbidden_address 仅审 ok、call_order 尝试口径——后两者列为 Owner 待裁量的设计题）；
+> 其余人工 triage 采纳为 F7–F14 修复：F7 qty_step_aligned 对损坏 qty 静默判对齐 + 取模溢出、
+> F8 spend_within 把损坏买入按 0 计（少算误 pass）+ 溢出崩溃、F9 确认调用可自我批准（∃ j<i 未严格）、
+> F10 bool 冒充数字（True==1）、F11 balance 非 dict/求和溢出崩溃、F12 open_orders 容器损坏崩溃、
+> F13 withdraw 参数/轨迹 arguments 损坏崩溃、F14 负 tolerance_pct 使正确答案 fail（缺 ≥0 约束）。
+> 同时修正 specs/06 参数表漂移（spend_within limit 可缺省、tool_not_called 无 min_count——以
+> FP07 实现与 C09/C13 语料为准）。回归守卫追加于 `tests/test_fp07_review_fixes.py`（Round 2 节）。
 
 ---
 

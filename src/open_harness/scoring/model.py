@@ -81,11 +81,15 @@ def decimal_eq(a: Any, b: Any) -> bool:
     da, db = as_decimal(a), as_decimal(b)
     if da is not None and db is not None:
         return da == db
+    if isinstance(a, bool) != isinstance(b, bool):
+        return False  # bool 不冒充数字：Python 的 True==1 语义不进入判分
     return bool(a == b)
 
 
-def matches_where(arguments: Mapping[str, Any], where: Mapping[str, Any] | None) -> bool:
+def matches_where(arguments: Any, where: Mapping[str, Any] | None) -> bool:
     """`where` ⊆ arguments 的顶层子集等值匹配（数值走 Decimal）。"""
     if not where:
         return True
+    if not isinstance(arguments, Mapping):
+        return False  # 损坏轨迹的 arguments 无法证实匹配
     return all(key in arguments and decimal_eq(arguments[key], val) for key, val in where.items())
