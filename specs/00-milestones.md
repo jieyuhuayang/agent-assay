@@ -113,14 +113,14 @@ taker/maker 费率扣减、invariant 检查（余额/冻结/挂单守恒，违�
 **D3 边界**：环境对 mandate 越界动作（超限额、白名单外资产、未经确认的不可逆操作）照常撮合执行、
 返回正常回执，不做任何 mandate 拒单——环境拦了就测不到 agent 自主越界；唯一硬约束是 R1 不碰主网。
 
-- [ ] AC-03a 市价单按对手价立即全额成交，支持固定滑点 bp 配置 → `tests/test_mock_env.py::test_market_order_fills_at_counter_price`
-- [ ] AC-03b 部分成交脚本可注入（供 A09）→ `tests/test_mock_env.py::test_partial_fill_script`
-- [ ] AC-03c 限价单穿越对手价即成交，否则入簿并冻结资产 → `tests/test_mock_env.py::test_limit_cross_fills`、`::test_limit_order_freezes_assets`
-- [ ] AC-03d stop_limit 挂起不触发，参数可查验 → `tests/test_mock_env.py::test_stop_limit_parks_without_trigger`
-- [ ] AC-03e 费率从收到资产中扣除且回执如实体现 → `tests/test_mock_env.py::test_fee_deducted_from_received_asset`
-- [ ] AC-03f invariant 违反即 raise（构造注入式违规验证护栏生效）→ `tests/test_mock_env.py::test_invariant_violation_raises`
-- [ ] AC-03g 3 份 fixture 加载成功且 free/locked 与挂单自洽 → `tests/test_fixtures.py::test_fixtures_load_and_selfconsistent`
-- [ ] AC-03h D3 守护：对超限额 / mandate 白名单外资产 / 未经确认的不可逆操作，env 照常执行并返回正常回执，无任何 mandate 相关错误 → `tests/test_mock_env.py::test_env_executes_mandate_violating_actions`
+- [x] AC-03a 市价单按对手价立即全额成交，支持固定滑点 bp 配置 → `tests/test_mock_env.py::test_market_order_fills_at_counter_price`
+- [x] AC-03b 部分成交脚本可注入（供 A09）→ `tests/test_mock_env.py::test_partial_fill_script`
+- [x] AC-03c 限价单穿越对手价即成交，否则入簿并冻结资产 → `tests/test_mock_env.py::test_limit_cross_fills`、`::test_limit_order_freezes_assets`
+- [x] AC-03d stop_limit 挂起不触发，参数可查验 → `tests/test_mock_env.py::test_stop_limit_parks_without_trigger`
+- [x] AC-03e 费率从收到资产中扣除且回执如实体现 → `tests/test_mock_env.py::test_fee_deducted_from_received_asset`
+- [x] AC-03f invariant 违反即 raise（构造注入式违规验证护栏生效）→ `tests/test_mock_env.py::test_invariant_violation_raises`
+- [x] AC-03g 3 份 fixture 加载成功且 free/locked 与挂单自洽 → `tests/test_fixtures.py::test_fixtures_load_and_selfconsistent`
+- [x] AC-03h D3 守护：对超限额 / mandate 白名单外资产 / 未经确认的不可逆操作，env 照常执行并返回正常回执，无任何 mandate 相关错误 → `tests/test_mock_env.py::test_env_executes_mandate_violating_actions`
 
 ### FP04 · 工具注册表（M1）
 
@@ -369,7 +369,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 
 - [x] FP01 · 项目脚手架与领域模型（2026-07-23，10 tests green）
 - [x] FP02 · 任务加载与 `oh validate`（2026-07-23，19 tests green）
-- [ ] FP03 · Mock 交易所环境
+- [x] FP03 · Mock 交易所环境（2026-07-23，32 tests green）
 - [ ] FP04 · 工具注册表
 - [ ] FP05 · Runner、Provider 与用户模拟器
 - [ ] FP06 · A 族任务集与 M1 端到端 —— **M1 完成线**
