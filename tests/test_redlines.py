@@ -351,3 +351,93 @@ def test_r8_confirm_assertion_reads_only_tool_metadata():
     # (b) 只读工具但快照标记不可逆 → 必须要求确认（证明判定只认快照）
     ticker_marked_irreversible = inv("get_ticker", {"symbol": "BTCUSDT"}, irreversible=True)
     assert not check_trajectory(spec, [ticker_marked_irreversible], ctx).passed
+
+
+# ------------------------------------------------------------ R3 / R4 ----
+
+
+def test_r3_judge_output_type_has_no_passfail():
+    """R3（类型级）：judge 输出只有质量分 + 理由，结构上不存在裁决字段。"""
+    import pydantic
+    import pytest
+
+    from open_harness.scoring.judge import JudgeVerdict
+
+    assert set(JudgeVerdict.model_fields) == {"quality", "rationale"}
+    with pytest.raises(pydantic.ValidationError):  # extra=forbid：塞裁决字段直接被拒
+        JudgeVerdict.model_validate({"quality": 2, "rationale": "x", "passed": True})
+
+
+def test_r3_failed_assertion_stays_failed_after_judge(monkeypatch):
+    """R3（流水线级）：断言 fail 的任务，judge 给满分也仍 fail。"""
+    from types import SimpleNamespace
+
+    from open_harness.results import Fingerprint as Fp
+    from open_harness.results import ResultRecord as RR
+    from open_harness.scoring import judge as judge_mod
+    from open_harness.scoring.model import ScoringContext
+    from open_harness.scoring.pipeline import score_episode
+    from open_harness.tasks.loader import load_mandate
+    from open_harness.tasks.schema import AssertionSpec, ExpectedSpec, TaskSpec
+
+    monkeypatch.setattr(
+        judge_mod, "_litellm_completion",
+        lambda model, messages, timeout: SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(
+                content='{"quality": 2, "rationale": "满分也翻不了案"}'))]
+        ),
+    )
+    task = TaskSpec(
+        id="A01", family="a", title="t", instruction="i", env="mock",
+        fixture="fixtures/std_account_1.yaml", mandate="mandates/std_conservative.yaml",
+        expected=ExpectedSpec(
+            trajectory=[AssertionSpec.model_validate({"assert": "tool_called", "tool": "withdraw"})],
+            judge_rubric="rubric",
+        ),
+    )
+    record = RR(
+        task_id="A01", status="done",
+        fingerprint=Fp(model="scripted", model_version="scripted-v0",
+                       taskset_version="v0.1.0", git_commit="deadbeef",
+                       timestamp="2026-07-23T00:00:00Z", temperature="0"),
+        trajectory=[], final_state={"balances": {}, "open_orders": [],
+                                    "new_trades": [], "new_transfers": []},
+    )
+    ctx = ScoringContext(mandate=load_mandate(REPO_ROOT / "mandates" / "std_conservative.yaml"))
+    scoring = score_episode(task, record, ctx, judge_model="fake-judge")
+    assert scoring["judge"] == {"quality": 2, "rationale": "满分也翻不了案"}
+    assert scoring["passed"] is False  # judge 不得推翻断言
+
+
+def test_r4_scripted_replay_byte_identical(tmp_path):
+    """R4：scripted 同任务两次运行，剥离 Q5 易变白名单后逐字节一致。
+
+    白名单写死在此测试里，防止比较范围悄悄扩大：
+    fingerprint.timestamp、timing（墙钟与 token 计数）。
+    """
+    import json
+
+    from typer.testing import CliRunner
+
+    from open_harness.cli import app
+
+    runner = CliRunner()
+    payloads = []
+    for sub in ("run1", "run2"):
+        out = tmp_path / sub
+        result = runner.invoke(
+            app,
+            ["run", "--model", "scripted", "--task", "A01", "--family", "a",
+             "--out", str(out), "--root", str(REPO_ROOT)],
+        )
+        assert result.exit_code == 0, result.output
+        payload = json.loads((out / "A01.json").read_text(encoding="utf-8"))
+        payload["fingerprint"].pop("timestamp")   # Q5 易变白名单
+        payload.pop("timing")                     # Q5 易变白名单
+        payloads.append(
+            json.dumps(payload, ensure_ascii=False, sort_keys=True).encode("utf-8")
+        )
+    assert payloads[0] == payloads[1]
+    # 评分已内联（AC-08g）且属于确定性比较范围
+    scored = json.loads(payloads[0])
+    assert scored["scoring"] is not None

@@ -87,3 +87,48 @@ def test_run_task_and_family_filters(tmp_path):
          "--root", str(REPO_ROOT)],
     )
     assert result.exit_code == 2
+
+
+def test_score_offline_rescore(tmp_path, monkeypatch):
+    """AC-08d：oh score 对既有 run 目录离线重评；judge 模型可配置替换。"""
+    import json
+    from types import SimpleNamespace
+
+    result = runner.invoke(
+        app,
+        ["run", "--model", "scripted", "--task", "A01", "--family", "a",
+         "--out", str(tmp_path), "--root", str(REPO_ROOT)],
+    )
+    assert result.exit_code == 0, result.output
+    out = tmp_path / "A01.json"
+
+    # 模拟旧版（无评分）结果文件 → oh score 回填
+    payload = json.loads(out.read_text(encoding="utf-8"))
+    payload["scoring"] = None
+    out.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+    result = runner.invoke(app, ["score", str(tmp_path), "--root", str(REPO_ROOT)])
+    assert result.exit_code == 0, result.output
+    rescored = json.loads(out.read_text(encoding="utf-8"))
+    assert rescored["scoring"]["passed"] is True  # A01 黄金脚本
+    assert rescored["scoring"]["judge"] is None   # 未指定 judge 模型
+
+    # judge 模型可替换（离线 stub，不出网）
+    from open_harness.scoring import judge as judge_mod
+
+    monkeypatch.setattr(
+        judge_mod, "_litellm_completion",
+        lambda model, messages, timeout: SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(
+                content='{"quality": 1, "rationale": "ok"}'))]
+        ),
+    )
+    result = runner.invoke(
+        app, ["score", str(tmp_path), "--judge-model", "fake-judge",
+              "--root", str(REPO_ROOT)],
+    )
+    assert result.exit_code == 0, result.output
+    judged = json.loads(out.read_text(encoding="utf-8"))
+    assert judged["scoring"]["judge"] == {"quality": 1, "rationale": "ok"}
+    assert judged["scoring"]["judge_model"] == "fake-judge"
+    assert judged["scoring"]["passed"] is True

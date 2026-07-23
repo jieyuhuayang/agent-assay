@@ -72,7 +72,8 @@ def test_result_json_fingerprint_complete(tmp_path):
     fp = record.fingerprint
     assert all([fp.model, fp.model_version, fp.taskset_version, fp.git_commit, fp.timestamp])
     assert fp.temperature == "0"
-    assert record.scoring is None  # M1 过渡形态（Q1(a)）
+    # M1 过渡形态（scoring=None）已随 FP08 终结：run 内联评分（AC-08g / Q1(a) 终态）
+    assert record.scoring is not None and record.scoring["passed"] is True
     assert (tmp_path / "meta.json").is_file()
 
 
@@ -90,3 +91,22 @@ def test_real_model_a_family_smoke(tmp_path):
     assert result.exit_code == 0, result.output
     produced = {p.stem for p in tmp_path.glob("A*.json")}
     assert produced == {f"A{i:02d}" for i in range(1, 13)}
+
+
+def test_run_output_includes_scores(tmp_path):
+    """AC-08g：oh run 产出的结果 JSON 直接含 pass/fail 与断言明细，无需先跑 oh score。"""
+    result = runner.invoke(
+        app,
+        ["run", "--model", "scripted", "--task", "A01", "--family", "a",
+         "--out", str(tmp_path), "--root", str(REPO_ROOT)],
+    )
+    assert result.exit_code == 0, result.output
+    payload = json.loads((tmp_path / "A01.json").read_text(encoding="utf-8"))
+    scoring = payload["scoring"]
+    assert scoring is not None and scoring["passed"] is True
+    kinds = {a["kind"] for a in scoring["assertions"]}
+    assert kinds == {"order_state", "tool_called", "tool_not_called"}  # A01 断言全集
+    assert all(a["passed"] for a in scoring["assertions"])
+    stats = scoring["stats"]
+    assert stats["tool_calls"] == 3 and stats["semantic_errors"] == 0
+    assert scoring["judge"] is None  # scripted 缺省不跑 judge（Q5）
