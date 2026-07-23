@@ -117,9 +117,11 @@ def _schema_issues(
 
 
 def _load_raw(root: Path, path: Path) -> tuple[Any, str, list[Issue]]:
+    from .loader import load_yaml_text
+
     text = path.read_text(encoding="utf-8")
     try:
-        return yaml.safe_load(text), text, []
+        return load_yaml_text(text), text, []
     except yaml.YAMLError as exc:
         return None, text, [Issue(file=_rel(root, path), code="schema", message=f"YAML 语法错误: {exc}")]
 
