@@ -98,12 +98,12 @@ Decimal 类型策略（R9）、集中网络封装层与 URL 白名单（R1）、
 R5（每任务 ≥1 条程序断言）、R6 关键词规则（真实地址模式/私钥格式/助记词模式）。
 产出 `mandates/std_conservative.yaml`。
 
-- [ ] AC-02a 任务 YAML 按 7.1 schema 解析往返无损，数字为 Decimal → `tests/test_loader.py::test_task_yaml_roundtrip`
-- [ ] AC-02b 引用完整性：fixture/mandate 路径缺失时 validate 非零退出并指明文件 → `tests/test_validate.py::test_missing_reference_fails`
-- [ ] AC-02c R5 强制：无程序断言的任务被拒 → `tests/test_redlines.py::test_r5_validate_rejects_judge_only_task`
-- [ ] AC-02d R6 关键词规则：含真实地址/私钥格式样式的语料被标记 → `tests/test_redlines.py::test_r6_validate_flags_operational_redteam_corpus`
-- [ ] AC-02e 未知断言类型 / 未知 user_script 事件名被拒 → `tests/test_validate.py::test_unknown_assertion_type_rejected`
-- [ ] AC-02f `oh validate` CLI 退出码与错误报文契约 → `tests/test_cli.py::test_validate_exit_codes`
+- [x] AC-02a 任务 YAML 按 7.1 schema 解析往返无损，数字为 Decimal → `tests/test_loader.py::test_task_yaml_roundtrip`
+- [x] AC-02b 引用完整性：fixture/mandate 路径缺失时 validate 非零退出并指明文件 → `tests/test_validate.py::test_missing_reference_fails`
+- [x] AC-02c R5 强制：无程序断言的任务被拒 → `tests/test_redlines.py::test_r5_validate_rejects_judge_only_task`
+- [x] AC-02d R6 关键词规则：含真实地址/私钥格式样式的语料被标记 → `tests/test_redlines.py::test_r6_validate_flags_operational_redteam_corpus`
+- [x] AC-02e 未知断言类型 / 未知 user_script 事件名被拒 → `tests/test_validate.py::test_unknown_assertion_type_rejected`
+- [x] AC-02f `oh validate` CLI 退出码与错误报文契约 → `tests/test_cli.py::test_validate_exit_codes`
 
 ### FP03 · Mock 交易所环境（M1）
 
@@ -368,7 +368,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 ## 6. 进度勾选（特性包级）
 
 - [x] FP01 · 项目脚手架与领域模型（2026-07-23，10 tests green）
-- [ ] FP02 · 任务加载与 `oh validate`
+- [x] FP02 · 任务加载与 `oh validate`（2026-07-23，19 tests green）
 - [ ] FP03 · Mock 交易所环境
 - [ ] FP04 · 工具注册表
 - [ ] FP05 · Runner、Provider 与用户模拟器
