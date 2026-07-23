@@ -123,3 +123,50 @@ def test_structural_results_rejected(tmp_path):
     save_result(record, run / "A01.json")
     with pytest.raises(ValueError, match="structural|结构"):
         build_report([run], REPO_ROOT, out_dir=tmp_path / "out")
+
+
+# ---------------------------------------------------- M3 审查修复（报告侧）----
+
+
+def test_duplicate_labels_not_overwritten(tmp_path):
+    """两个 run 的 meta.model 相同（同一模型跑两次做对比）不得互相覆盖。"""
+    run1 = _write_run(tmp_path / "r1", "dup-model")
+    run2 = _write_run(tmp_path / "r2", "dup-model")
+    out = tmp_path / "out"
+    report_text = build_report([run1, run2], REPO_ROOT, out_dir=out).read_text(encoding="utf-8")
+    assert "| dup-model |" in report_text and "| dup-model#2 |" in report_text
+    per_model_svgs = [p for p in out.glob("radar-*.svg") if p.name != "radar-overlay.svg"]
+    assert len(per_model_svgs) == 2
+
+
+def test_slug_collision_gets_distinct_svgs(tmp_path):
+    """label 不同但 slug 相同（'gpt 4o' vs 'gpt:4o'）不得覆盖同一 SVG 文件。"""
+    run1 = _write_run(tmp_path / "r1", "gpt 4o")
+    run2 = _write_run(tmp_path / "r2", "gpt:4o")
+    out = tmp_path / "out"
+    build_report([run1, run2], REPO_ROOT, out_dir=out)
+    names = sorted(p.name for p in out.glob("radar-*.svg") if p.name != "radar-overlay.svg")
+    assert len(names) == 2 and len(set(names)) == 2
+
+
+def test_report_header_carries_fingerprint(tmp_path):
+    """specs/12 §4：报告头须含 taskset_version 与 git_commit（来自结果指纹）。"""
+    run = _write_run(tmp_path / "run1", "test-model")
+    text = build_report([run], REPO_ROOT, out_dir=tmp_path / "out").read_text(encoding="utf-8")
+    assert "v0.1.0" in text and "deadbeef" in text
+
+
+def test_radar_palette_cycles_beyond_seven():
+    """超过 7 个 run 时调色板循环使用，不得静默丢模型。"""
+    from decimal import Decimal as D
+
+    from agent_assay.report.build import _render_radar
+
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "many.svg"
+        series = [(f"model-{i}", [D("0.5")] * 6) for i in range(9)]
+        _render_radar(path, series)
+        content = path.read_text(encoding="utf-8")
+        for i in range(9):
+            assert f"model-{i}" in content, f"overlay 丢失 model-{i}"

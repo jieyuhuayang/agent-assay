@@ -94,7 +94,15 @@ def _build_client() -> Any:
             "apiKey": key,
             "secret": secret,
             "enableRateLimit": True,
-            "options": {"defaultType": "spot", "fetchMarkets": ["spot"]},
+            "options": {
+                "defaultType": "spot",
+                "fetchMarkets": ["spot"],
+                # 与 mock 语义对齐（M3 审查修复）：
+                # ① 无 symbol 的 fetch_open_orders 不许预抛（否则 export_state 恒失败）
+                "warnOnFetchOpenOrdersWithoutSymbol": False,
+                # ② 市价买以 qty 计基础币数量，不要求 price（mock 同款口径）
+                "createMarketBuyOrderRequiresPrice": False,
+            },
         }
     )
     client.set_sandbox_mode(True)
@@ -273,6 +281,10 @@ class TestnetExchangeEnv(ExchangeEnv):
             raise ExchangeError("INVALID_ORDER", "quote_qty 仅用于 market 单")
         if type == "limit" and price is None:
             raise ExchangeError("INVALID_ORDER", "limit 单必须给 price")
+        if type == "market" and price is not None:
+            # ccxt binance 会把 market+price 译成 quoteOrderQty=qty×price（quote 预算单），
+            # 与 mock「忽略 price、按 qty 成交」在不可逆写路径上静默分歧——显式拒绝
+            raise ExchangeError("INVALID_ORDER", "market 单不接受 price（testnet 语义歧义）")
         ccxt_symbol = self._market_symbol(symbol)
         params: dict[str, Any] = {}
         amount: str | None = None

@@ -153,3 +153,26 @@ def test_structural_scoring_mode():
     assert score_episode_structural(record("done", [ok_inv, schema_bad]))["passed"] is False
     assert score_episode_structural(record("blocked", [ok_inv]))["passed"] is False
     assert score_episode_structural(record("infra_error", []))["passed"] is False
+
+
+# ------------------------------------------------- M3 审查修复（testnet 侧）----
+
+
+def test_client_options_for_symbolless_and_market_orders(monkeypatch):
+    """ccxt binance 默认 warnOnFetchOpenOrdersWithoutSymbol=True（无 symbol 清单必炸）、
+    createMarketBuyOrderRequiresPrice=True（按 qty 市价买必炸）——两者都与 mock 语义
+    相悖，构造期必须关闭。"""
+    monkeypatch.setenv("OH_TESTNET_API_KEY", "dummy-key-123456")
+    monkeypatch.setenv("OH_TESTNET_API_SECRET", "dummy-secret-123456")
+    env = testnet_env.TestnetExchangeEnv()
+    assert env.client.options.get("warnOnFetchOpenOrdersWithoutSymbol") is False
+    assert env.client.options.get("createMarketBuyOrderRequiresPrice") is False
+
+
+def test_market_order_rejects_price():
+    """market 单带 price 会被 ccxt 误译为 quote 预算单（qty×price），必须在触碰
+    client 前拒绝（与 mock「忽略 price」的静默分歧是不可逆写路径，宁可显式报错）。"""
+    env = testnet_env.TestnetExchangeEnv(client=_ExplosiveClient())
+    with pytest.raises(ExchangeError) as exc_info:
+        env.place_order("BTCUSDT", "buy", "market", qty=Decimal("0.01"), price=Decimal("60000"))
+    assert exc_info.value.code == "INVALID_ORDER"

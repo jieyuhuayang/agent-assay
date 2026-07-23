@@ -2,7 +2,9 @@
 
 specs/10 契约：
 - 用低层 Server API（不用 FastMCP），工具列表纯反射自 registry，不存在第二份 schema；
-- call_tool 永不 raise（沿用 registry「结构化错误」契约；InvariantViolation 例外，任其上抛）；
+- call_tool 永不 raise（沿用 registry「结构化错误」契约）；InvariantViolation 例外：
+  mcp SDK 会把 handler 的一切 Exception 吞成 isError 响应继续服务，账本损坏不能靠
+  上抛——handler 自行写 stderr 后终止进程（specs/10 §3，M3 审查修复）；
 - mandate 经 server ``instructions`` 注入（D-g，D3 形态①的 MCP 对应物）；
 - MCP 模式无模拟用户（D-f）：ask_user 返回固定提示语，request_confirmation 默认
   denied（fail-safe），``--auto-approve`` 翻转为恒 approved。
@@ -11,7 +13,11 @@ specs/10 契约：
 from __future__ import annotations
 
 import json
+import os
+import sys
 from typing import TYPE_CHECKING, Any
+
+from .env.base import InvariantViolation
 
 from .agent.prompt import assemble_system_prompt
 from .env.base import ExchangeEnv
@@ -46,6 +52,31 @@ def _make_context(env: ExchangeEnv, *, auto_approve: bool) -> ToolContext:
     )
 
 
+def _make_call_tool(ctx: ToolContext):
+    """call_tool handler 工厂（模块级，便于单测 InvariantViolation 护栏）。"""
+
+    async def _call_tool(name: str, arguments: dict[str, Any] | None) -> list[Any]:
+        import mcp.types as types
+
+        try:
+            invocation = execute_tool(name, arguments or {}, ctx)
+        except InvariantViolation as exc:
+            # SDK 的 call_tool wrapper 会把 handler 的一切 Exception 吞成 isError 响应
+            # 并继续服务；账本损坏必须炸出（specs/10 §3）——唯一可靠通道是自行终止进程
+            print(f"FATAL InvariantViolation: {exc}", file=sys.stderr, flush=True)
+            os._exit(70)
+        payload = {
+            "ok": invocation.ok,
+            "result": invocation.result,
+            "error_code": invocation.error_code,
+            "error_kind": invocation.error_kind,
+            "error_message": invocation.error_message,
+        }
+        return [types.TextContent(type="text", text=json.dumps(payload, ensure_ascii=False))]
+
+    return _call_tool
+
+
 async def _serve_async(env: ExchangeEnv, mandate: MandateSpec, *, auto_approve: bool) -> None:
     import mcp.types as types
     from mcp.server.lowlevel import Server
@@ -58,16 +89,7 @@ async def _serve_async(env: ExchangeEnv, mandate: MandateSpec, *, auto_approve: 
     async def _list_tools() -> list[types.Tool]:
         return build_mcp_tools()
 
-    async def _call_tool(name: str, arguments: dict[str, Any] | None) -> list[types.TextContent]:
-        invocation = execute_tool(name, arguments or {}, ctx)
-        payload = {
-            "ok": invocation.ok,
-            "result": invocation.result,
-            "error_code": invocation.error_code,
-            "error_kind": invocation.error_kind,
-            "error_message": invocation.error_message,
-        }
-        return [types.TextContent(type="text", text=json.dumps(payload, ensure_ascii=False))]
+    _call_tool = _make_call_tool(ctx)
 
     try:
         # 校验只做一层：registry 是唯一校验点，SDK 侧关闭 input 校验以保住结构化错误契约

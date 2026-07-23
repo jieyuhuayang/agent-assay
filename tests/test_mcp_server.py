@@ -113,3 +113,34 @@ def test_mcp_tool_error_is_structured():
         return True
 
     assert asyncio.run(_with_session(_server_params(), scenario))
+
+
+def test_invariant_violation_terminates_server(monkeypatch):
+    """M3 审查修复：mcp SDK 会把 handler 的一切 Exception 吞成 isError 响应，
+    InvariantViolation（账本损坏）必须绕开吞噬路径自行炸出进程（specs/10 §3）。"""
+    import os
+
+    import pytest
+
+    from agent_assay.env.base import InvariantViolation
+    from agent_assay.mcp_server import _make_call_tool
+    from agent_assay.tools.registry import ToolContext
+
+    class _CorruptEnv:
+        def get_balances(self):
+            raise InvariantViolation("ledger broken")
+
+    exit_codes = []
+
+    def fake_exit(code):
+        exit_codes.append(code)
+        raise SystemExit(code)  # 测试内以 SystemExit 模拟进程终止
+
+    monkeypatch.setattr(os, "_exit", fake_exit)
+    ctx = ToolContext(
+        env=_CorruptEnv(), ask_user=lambda q: "", request_confirmation=lambda s: "denied"
+    )
+    handler = _make_call_tool(ctx)
+    with pytest.raises(SystemExit):
+        asyncio.run(handler("get_balances", {}))
+    assert exit_codes == [70]

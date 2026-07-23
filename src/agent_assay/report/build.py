@@ -10,6 +10,7 @@ import json
 import math
 import re
 from dataclasses import dataclass
+from itertools import cycle
 from decimal import ROUND_HALF_EVEN, Decimal
 from pathlib import Path
 from typing import Any
@@ -44,6 +45,8 @@ class RunReport:
     run_dir: Path
     rows: list[TaskScore]
     metrics: dict[str, Any]
+    taskset_version: str = ""
+    git_commit: str = ""
 
 
 # ------------------------------------------------------------ 行组装 ----
@@ -88,11 +91,14 @@ def load_run(run_dir: Path, root: Path) -> RunReport:
     if meta_path.is_file():
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
     rows = []
+    fingerprint = None
     for path in sorted(run_dir.glob("*.json")):
         if path.name == "meta.json":
             continue
         record = ResultRecord.model_validate(json.loads(path.read_text(encoding="utf-8")))
         rows.append(_row_of(record, root))
+        if fingerprint is None:
+            fingerprint = record.fingerprint
     if not rows:
         raise ValueError(f"{run_dir} 下没有结果文件")
     return RunReport(
@@ -100,6 +106,8 @@ def load_run(run_dir: Path, root: Path) -> RunReport:
         run_dir=run_dir,
         rows=rows,
         metrics=compute_metrics(rows),
+        taskset_version=fingerprint.taskset_version,
+        git_commit=fingerprint.git_commit,
     )
 
 
@@ -176,7 +184,8 @@ def _render_radar(
     closed_angles = angles + angles[:1]
     fig = plt.figure(figsize=(6, 6))
     ax = fig.add_subplot(polar=True)
-    for (label, values), color in zip(series, _PALETTE):
+    # 调色板循环使用：run 数超过色板长度时不得静默丢模型（M3 审查修复）
+    for (label, values), color in zip(series, cycle(_PALETTE)):
         floats = [float(v) if v is not None else 0.0 for v in values]  # R9 豁免区唯一转换点
         ax.plot(closed_angles, floats + floats[:1], label=label, color=color, linewidth=2)
         ax.fill(closed_angles, floats + floats[:1], color=color, alpha=0.12)
@@ -230,6 +239,12 @@ def build_report(
     run_dirs: list[Path], root: Path, out_dir: Path | None = None
 ) -> Path:
     runs = [load_run(run_dir, root) for run_dir in run_dirs]
+    # label 唯一化：同名模型的多个 run（正常对比用法）不得互相覆盖（M3 审查修复）
+    seen_labels: dict[str, int] = {}
+    for run in runs:
+        seen_labels[run.label] = seen_labels.get(run.label, 0) + 1
+        if seen_labels[run.label] > 1:
+            run.label = f"{run.label}#{seen_labels[run.label]}"
     out = out_dir if out_dir is not None else run_dirs[0]
     out.mkdir(parents=True, exist_ok=True)
 
@@ -239,8 +254,15 @@ def build_report(
     }
 
     svg_paths: dict[str, Path] = {}
+    used_slugs: set[str] = set()
     for run in runs:
-        svg = out / f"radar-{_slug(run.label)}.svg"
+        slug = base_slug = _slug(run.label)
+        suffix = 2
+        while slug in used_slugs:  # 不同 label 压缩后同名（"gpt 4o"/"gpt:4o"）不得覆盖
+            slug = f"{base_slug}-{suffix}"
+            suffix += 1
+        used_slugs.add(slug)
+        svg = out / f"radar-{slug}.svg"
         _render_radar(svg, [(run.label, values_by_label[run.label])])
         svg_paths[run.label] = svg
     overlay = out / "radar-overlay.svg"
@@ -251,6 +273,11 @@ def build_report(
         "",
         f"- runs: {', '.join(r.label for r in runs)}",
         f"- tasks per run: {[len(r.rows) for r in runs]}",
+        # specs/12 §4：报告头须含指纹（taskset / commit，来自结果 JSON，R11 必填）
+        *(
+            f"- {r.label}: taskset {r.taskset_version}, commit {r.git_commit[:12]}"
+            for r in runs
+        ),
         "",
         "## Leaderboard",
         "",
