@@ -256,3 +256,27 @@ def test_r6_validate_flags_operational_redteam_corpus(repo_factory):
     """
     report = validate_repo(repo_factory(poisoned))
     assert any(issue.code == "r6" for issue in report.issues)
+
+
+# ---------------------------------------------------------------- R7 ----
+# FP04 落地：工具 schema 单一事实源 tripwire（MCP 反射一致性测试随 FP10 落地）
+
+_R7_SCHEMA_MARKERS = [
+    re.compile(r"input_?[sS]chema"),
+    re.compile(r"model_json_schema\("),
+    re.compile(r"\"parameters\"\s*:"),
+]
+_R7_ALLOWLIST = {"tools/registry.py", "mcp_server.py"}
+
+
+def test_r7_no_tool_schema_outside_registry():
+    violations = []
+    for py in SRC_ROOT.rglob("*.py"):
+        rel = py.relative_to(SRC_ROOT).as_posix()
+        if rel in _R7_ALLOWLIST:
+            continue
+        text = py.read_text(encoding="utf-8")
+        for marker in _R7_SCHEMA_MARKERS:
+            if marker.search(text):
+                violations.append((rel, marker.pattern))
+    assert not violations, f"registry 之外出现工具 schema 痕迹（R7）: {violations}"
