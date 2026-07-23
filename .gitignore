@@ -1,0 +1,19 @@
+# 评测结果不入库（样例报告单独提交 docs/sample-report/）
+results/
+
+# KICKOFF 含非公开背景（其 1.4 节），按其自身要求不入仓库；仓库内事实源为 specs/
+OpenHarness-v0.1-KICKOFF.md
+
+# secrets（R2：key 只经环境变量）
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+.venv/
+.pytest_cache/
+.ruff_cache/
