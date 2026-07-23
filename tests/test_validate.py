@@ -69,3 +69,26 @@ def test_bare_float_rejected(repo_factory):
     report = validate_repo(repo_factory(fixture_yaml=bad_fixture))
     floats = [issue for issue in report.issues if issue.code == "float"]
     assert floats and "free" in floats[0].message
+
+
+def test_fixture_invariant_checked(repo_factory):
+    """FP03：validate 对 fixture 追加自洽性检查（locked 与挂单守恒）。"""
+    inconsistent = """
+    balances:
+      USDT: {free: "1000", locked: "999"}   # 无挂单却有冻结
+    rules:
+      BTCUSDT:
+        base: BTC
+        quote: USDT
+        step_size: "0.00001"
+        min_qty: "0.00001"
+        min_notional: "5"
+        tick_size: "0.01"
+        price_min: "0.01"
+        price_max: "1000000"
+        maker_fee: "0.001"
+        taker_fee: "0.001"
+    tickers: {}
+    """
+    report = validate_repo(repo_factory(task_yaml=None, fixture_yaml=inconsistent))
+    assert any(issue.code == "fixture-invariant" for issue in report.issues)

@@ -13,6 +13,8 @@ balances:
   BTC: {free: "0.5", locked: "0"}
 rules:
   BTCUSDT:
+    base: BTC
+    quote: USDT
     step_size: "0.00001"
     min_qty: "0.00001"
     min_notional: "5"
