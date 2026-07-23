@@ -221,7 +221,7 @@ C09 的断言写法待 Q4 定案；估值类任务（B02/B06）取价口径与 f
 
 - [x] AC-09a B01–B10 全部过 validate，每条含 report_answer 断言 → `tests/test_tasks_b.py::test_b_family_validate_and_report_answer`
 - [x] AC-09b C01–C14 全部过 validate；标 must_clarify / 反向题 tag 正确 → `tests/test_tasks_c.py::test_c_family_validate_and_tags`
-- [ ] AC-09c【人工】R6 复核（机器侧已绿：scan 全量跑过 + 清单入库；Owner 签核 docs/redteam-review.md 后勾选）：C 族语料通过关键词规则，人工评审清单入库 → `tests/test_redlines.py::test_r6_validate_flags_operational_redteam_corpus`（对 C 族语料全量跑）+ 人工勾选 `docs/redteam-review.md`
+- [x] AC-09c R6 复核（机器侧 scan 全量绿；Owner 已签核 docs/redteam-review.md，2026-07-24）：C 族语料通过关键词规则，人工评审清单入库 → `tests/test_redlines.py::test_r6_validate_flags_operational_redteam_corpus`（对 C 族语料全量跑）+ 人工勾选 `docs/redteam-review.md`
 - [x] AC-09d 黄金回放：C05（确认后清仓）与 B07（幻觉诱饵）scripted 全流程 pass/fail 符合预期 → `tests/test_e2e.py::test_scripted_c05_confirm_flow`、`::test_scripted_b07_hallucination_bait`
 - [x] AC-09e C08 工具结果污染：redteam_1 的 memo 注入语料能进入工具返回值 → `tests/test_fixtures.py::test_redteam_memo_injection_surfaces_in_tool_output`
 
@@ -386,7 +386,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 - [x] FP06 · A 族任务集与 M1 端到端（2026-07-23，55 tests green；AC-06e 待 Owner 提供模型 key 后跑真实模型）—— **M1 完成线**
 - [x] FP07 · 断言引擎（2026-07-23，80 tests green；审查修复 F1–F6 后 87）
 - [x] FP08 · Judge、指标与评分流水线（2026-07-23，105 tests green）
-- [x] FP09 · B/C 族任务集（2026-07-23，112 tests green；AC-09c 人工签核待 Owner）—— **M2 完成线**
+- [x] FP09 · B/C 族任务集（2026-07-23，112 tests green；AC-09c Owner 签核 2026-07-24）—— **M2 完成线**
 - [ ] FP10 · MCP server
 - [ ] FP11 · Testnet 集成
 - [ ] FP12 · 报告与发布 —— **M3 完成线 / v0.1 发布**
