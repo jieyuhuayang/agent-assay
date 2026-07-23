@@ -5,7 +5,7 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation
 from typing import Annotated, Any
 
-from pydantic import BeforeValidator, PlainSerializer
+from pydantic import BeforeValidator, PlainSerializer, WithJsonSchema
 
 
 def to_decimal(value: Any) -> Decimal:
@@ -30,4 +30,12 @@ Money = Annotated[
     Decimal,
     BeforeValidator(to_decimal),
     PlainSerializer(str, return_type=str, when_used="json"),
+    # 工具/JSON schema 面向模型：金额声明为十进制字符串（R9）
+    WithJsonSchema(
+        {
+            "type": "string",
+            "pattern": r"^-?\d+(\.\d+)?$",
+            "description": "Decimal amount encoded as a string, e.g. \"0.5\"",
+        }
+    ),
 ]
