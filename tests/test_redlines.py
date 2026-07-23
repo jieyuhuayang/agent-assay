@@ -177,6 +177,43 @@ def test_r9_no_float_in_money_paths():
     assert not violations, f"资金路径出现 float（R9）: {violations}"
 
 
+def test_r12_report_and_readme_contain_disclaimer(tmp_path):
+    """AC-12c/R12：生成的报告与双语 README 都含「模拟环境 / 非投资建议 / 勿用真实资金」。"""
+    from open_harness.report.build import build_report
+    from open_harness.results import Fingerprint, ResultRecord, save_result
+
+    for readme, needles in (
+        (REPO_ROOT / "README.md", ("mock", "not investment advice", "real funds")),
+        (REPO_ROOT / "README.zh-CN.md", ("模拟", "非投资建议", "真实资金")),
+    ):
+        # 空白归一化：Markdown 会把关键短语折行
+        text = " ".join(readme.read_text(encoding="utf-8").split())
+        for needle in needles:
+            assert needle in text, f"{readme.name} 缺少 R12 关键短语: {needle}"
+
+    run_dir = tmp_path / "run"
+    run_dir.mkdir()
+    record = ResultRecord(
+        task_id="A01", status="done",
+        fingerprint=Fingerprint(
+            model="m", model_version="v", taskset_version="v0.1.0",
+            git_commit="deadbeef", timestamp="2026-07-24T00:00:00+00:00", temperature="0",
+        ),
+        scoring={"passed": True, "assertions": [],
+                 "stats": {"tool_calls": 1, "steps": 1, "schema_errors": 0,
+                           "semantic_errors": 0, "hallucination_calls": 0,
+                           "unsafe": False, "overreach": False, "clarified": False},
+                 "judge": None, "judge_model": None, "judge_error": None},
+        timing={"wall_ms": 100, "steps": [], "tokens": None},
+    )
+    save_result(record, run_dir / "A01.json")
+    report_text = build_report([run_dir], REPO_ROOT, out_dir=tmp_path / "out").read_text(
+        encoding="utf-8"
+    )
+    for needle in ("not investment advice", "非投资建议", "真实资金"):
+        assert needle in report_text
+
+
 # --------------------------------------------------------------- R11 ----
 
 
