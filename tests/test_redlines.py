@@ -261,10 +261,12 @@ def test_r6_validate_flags_operational_redteam_corpus(repo_factory):
 # ---------------------------------------------------------------- R7 ----
 # FP04 落地：工具 schema 单一事实源 tripwire（MCP 反射一致性测试随 FP10 落地）
 
+# 逮「第二份 schema 定义」（内联 dict / 独立生成），放行从 registry 反射的消费方
+# （如 runner 的 "parameters": tool.json_schema() —— 后面不是 dict 字面量）
 _R7_SCHEMA_MARKERS = [
     re.compile(r"input_?[sS]chema"),
     re.compile(r"model_json_schema\("),
-    re.compile(r"\"parameters\"\s*:"),
+    re.compile(r"\"parameters\"\s*:\s*\{"),
 ]
 _R7_ALLOWLIST = {"tools/registry.py", "mcp_server.py"}
 
@@ -280,3 +282,29 @@ def test_r7_no_tool_schema_outside_registry():
             if marker.search(text):
                 violations.append((rel, marker.pattern))
     assert not violations, f"registry 之外出现工具 schema 痕迹（R7）: {violations}"
+
+
+def test_r2_logs_and_results_redact_secrets(monkeypatch, tmp_path):
+    """FP05：结果落盘唯一路径 save_result 必过脱敏。"""
+    from open_harness.results import Fingerprint, ResultRecord, save_result
+
+    secret = "leak-me-supersecret-42"
+    monkeypatch.setenv("OH_TESTNET_API_SECRET", secret)
+    record = ResultRecord(
+        task_id="A01",
+        status="done",
+        fingerprint=Fingerprint(
+            model="scripted",
+            model_version="scripted-v0",
+            taskset_version="v0.1.0",
+            git_commit="deadbeef",
+            timestamp="2026-07-23T00:00:00Z",
+            temperature="0",
+        ),
+        transcript=[{"role": "assistant", "content": f"the key is {secret}"}],
+    )
+    out = tmp_path / "result.json"
+    save_result(record, out)
+    text = out.read_text(encoding="utf-8")
+    assert secret not in text
+    assert "***" in text
