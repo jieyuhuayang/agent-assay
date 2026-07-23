@@ -1,11 +1,11 @@
-# Open Harness
+# AgentAssay
 
 **The first fiduciary-execution benchmark for exchange agents.**
 
 [中文版 README](README.zh-CN.md)
 
 Exchange agents are starting to execute real instructions over real accounts. Existing
-benchmarks mostly ask *"can the model call tools correctly?"* — Open Harness asks the
+benchmarks mostly ask *"can the model call tools correctly?"* — AgentAssay asks the
 question that matters when money moves: **does the agent act as a faithful fiduciary
 within an explicit mandate?** Every episode runs against a deterministic mock exchange
 under a signed *mandate* (spend limit, asset whitelist, withdraw whitelist, confirmation
@@ -23,19 +23,19 @@ policy), and the agent is scored on both halves:
 
 ## Leaderboard
 
-*Coming with the v0.1 release — `oh report` generates the table plus six-axis radar
+*Coming with the v0.1 release — `assay report` generates the table plus six-axis radar
 charts (A/B success, C safety, tool accuracy, clarification, efficiency).*
 
 ## Quickstart (mock, ~5 minutes)
 
 ```bash
-git clone <repo-url> && cd open-harness
+git clone <repo-url> && cd agent-assay
 uv sync                                        # Python 3.11+, https://docs.astral.sh/uv/
-uv run oh validate                             # lint the 36-task corpus
-uv run oh run --env mock --model scripted --family a   # deterministic golden replay
-uv run oh run --env mock --model <litellm-model-name>  # score a real model
-uv run oh score results/<run_dir> --judge-model <m>    # offline (re-)scoring + LLM judge
-uv run oh report results/<run_dir> [...more runs]      # leaderboard + radar SVGs
+uv run assay validate                             # lint the 36-task corpus
+uv run assay run --env mock --model scripted --family a   # deterministic golden replay
+uv run assay run --env mock --model <litellm-model-name>  # score a real model
+uv run assay score results/<run_dir> --judge-model <m>    # offline (re-)scoring + LLM judge
+uv run assay report results/<run_dir> [...more runs]      # leaderboard + radar SVGs
 ```
 
 Results are per-task JSON files with a full fingerprint (model version, taskset version,
@@ -79,7 +79,7 @@ The same tool registry is exposed as a standard MCP server (stdio) for external 
 such as Claude Desktop / Claude Code:
 
 ```bash
-uv run oh serve-mcp --fixture fixtures/std_account_1.yaml --mandate mandates/std_conservative.yaml
+uv run assay serve-mcp --fixture fixtures/std_account_1.yaml --mandate mandates/std_conservative.yaml
 ```
 
 The mandate is injected through MCP `instructions`; tool schemas are reflected from the
@@ -87,7 +87,7 @@ single registry source of truth. See [docs/mcp-usage.md](docs/mcp-usage.md).
 
 ## Testnet mode
 
-`oh run --env testnet` runs a sampled subset (8 A/B tasks marked `env: both`) against the
+`assay run --env testnet` runs a sampled subset (8 A/B tasks marked `env: both`) against the
 Binance **Spot Testnet** (fake funds) for realism / API-compatibility checks: scoring is
 structural only, results never enter the leaderboard, `withdraw` is always simulated, and
 the only reachable exchange host is `testnet.binance.vision` — enforced at client

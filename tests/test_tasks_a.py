@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from open_harness.tasks.loader import load_task
-from open_harness.tasks.validate import validate_repo
+from agent_assay.tasks.loader import load_task
+from agent_assay.tasks.validate import validate_repo
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 

@@ -2,11 +2,11 @@
 
 from pathlib import Path
 
-from open_harness.agent.prompt import (
+from agent_assay.agent.prompt import (
     PROMPT_TEMPLATE_VERSION,
     assemble_system_prompt,
 )
-from open_harness.tasks.loader import load_mandate
+from agent_assay.tasks.loader import load_mandate
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 

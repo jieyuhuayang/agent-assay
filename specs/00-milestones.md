@@ -1,4 +1,4 @@
-# specs/00-milestones.md — Open Harness v0.1 特性包拆解与 AC 总表
+# specs/00-milestones.md — AgentAssay v0.1 特性包拆解与 AC 总表
 
 > 本文件是 KICKOFF 文档（`OpenHarness-v0.1-KICKOFF.md`）第 14 节「第 0 步」的产出，
 > 也是 SDD 流程的进度事实源：实现任何特性前，先在本文件找到对应特性包与 AC；
@@ -43,7 +43,7 @@
 | R2 | API key 只经环境变量进入，绝不落盘 | secret 扫描 + .gitignore + 日志脱敏 | `tests/test_redlines.py::test_r2_no_secrets_in_repo_files`、`::test_r2_api_key_only_from_env`、`::test_r2_logs_and_results_redact_secrets` | FP01、FP05 |
 | R3 | judge 不得推翻程序断言结果 | judge 输出类型无 pass/fail 字段 + 流水线测试 | `tests/test_redlines.py::test_r3_judge_output_type_has_no_passfail`、`::test_r3_failed_assertion_stays_failed_after_judge` | FP08 |
 | R4 | 同 seed + fixture + scripted provider → 完全一致轨迹与评分 | 回放一致性测试 | `tests/test_redlines.py::test_r4_scripted_replay_byte_identical` | FP08 |
-| R5 | 每任务至少一条程序断言，禁止 judge-only | `oh validate` 强制 | `tests/test_redlines.py::test_r5_validate_rejects_judge_only_task` | FP02 |
+| R5 | 每任务至少一条程序断言，禁止 judge-only | `assay validate` 强制 | `tests/test_redlines.py::test_r5_validate_rejects_judge_only_task` | FP02 |
 | R6 | C 族语料最小语义化：无真实地址/私钥格式/可复用钓鱼模板 | validate 关键词规则 + 人工评审清单 | `tests/test_redlines.py::test_r6_validate_flags_operational_redteam_corpus` + `docs/redteam-review.md` 人工清单 | FP02、FP09 |
 | R7 | 工具 schema 单一事实源（registry），MCP 与 runner 共用 | MCP 从 registry 反射 + 一致性测试 | `tests/test_redlines.py::test_r7_no_tool_schema_outside_registry`、`::test_r7_mcp_schemas_match_registry` | FP04、FP10 |
 | R8 | 不可逆性判定只在工具元数据中定义 | `confirm_before_irreversible` 只读元数据实现 | `tests/test_redlines.py::test_r8_confirm_assertion_reads_only_tool_metadata`（FP07 评分器侧）+ `tests/test_registry.py::test_irreversible_metadata_dynamic`（FP04 元数据接口侧） | FP04、FP07 |
@@ -65,7 +65,7 @@
 | FP | 里程碑 | 名称 | 依赖 | 覆盖 KICKOFF AC | 守护红线 |
 |----|-------|------|------|----------------|---------|
 | FP01 | M1 | 项目脚手架与领域模型 | — | AC1.6（部分） | R1 R2 R9 R11 |
-| FP02 | M1 | 任务/fixture/mandate 加载与 `oh validate` | FP01 | AC1.1 | R5 R6 |
+| FP02 | M1 | 任务/fixture/mandate 加载与 `assay validate` | FP01 | AC1.1 | R5 R6 |
 | FP03 | M1 | Mock 交易所环境 | FP01 | AC1.2 | D3；R9 延伸 |
 | FP04 | M1 | 工具注册表（12 工具） | FP03 | AC1.3 | R7 R8 D3 |
 | FP05 | M1 | Runner、Provider 与用户模拟器 | FP02, FP04 | AC1.4（部分）、AC2.3 | R2（日志脱敏） |
@@ -73,7 +73,7 @@
 | FP07 | M2 | 断言引擎（7.2 节全集） | FP03, FP05 | AC2.1 | R8 |
 | FP08 | M2 | Judge、指标与评分流水线 | FP06, FP07 | AC2.4、AC2.5、AC2.6 | R3 R4 |
 | FP09 | M2 | B 族（10 条）+ C 族（14 条）任务集 | FP02, FP07 | AC2.2 | R6 |
-| FP10 | M3 | MCP server（`oh serve-mcp`） | FP02, FP04 | AC3.4 | R7 |
+| FP10 | M3 | MCP server（`assay serve-mcp`） | FP02, FP04 | AC3.4 | R7 |
 | FP11 | M3 | Testnet 集成模式 | FP03, FP04, FP06（AC-11e 另需 FP09） | AC3.3 | R1 R2 |
 | FP12 | M3 | 报告、三模型跑分与发布 | FP08, FP09, FP10, FP11 | AC3.1、AC3.2、AC3.5、AC3.6 | R12 |
 
@@ -112,10 +112,10 @@ Decimal 类型策略（R9）、集中网络封装层与 URL 白名单（R1）、
 - [x] AC-01e secret 扫描：仓库无 key 样式字符串；key 仅可经环境变量读入 → `tests/test_redlines.py::test_r2_no_secrets_in_repo_files`、`::test_r2_api_key_only_from_env`
 - [x] AC-01f 资金路径无 float：静态检查 src/ 资金模块禁用 float 字面量/构造 → `tests/test_redlines.py::test_r9_no_float_in_money_paths`
 
-### FP02 · 任务/fixture/mandate 加载与 `oh validate`（M1）
+### FP02 · 任务/fixture/mandate 加载与 `assay validate`（M1）
 
 范围：`tasks/schema.py`（7.1 节 YAML schema）、`tasks/loader.py`、mandate 加载（第 6 节）、
-`cli.py` 骨架（typer）+ `oh validate`：schema 校验、引用完整性（fixture/mandate 存在）、
+`cli.py` 骨架（typer）+ `assay validate`：schema 校验、引用完整性（fixture/mandate 存在）、
 R5（每任务 ≥1 条程序断言）、R6 关键词规则（真实地址模式/私钥格式/助记词模式）。
 产出 `mandates/std_conservative.yaml`。
 
@@ -124,7 +124,7 @@ R5（每任务 ≥1 条程序断言）、R6 关键词规则（真实地址模式
 - [x] AC-02c R5 强制：无程序断言的任务被拒 → `tests/test_redlines.py::test_r5_validate_rejects_judge_only_task`
 - [x] AC-02d R6 关键词规则：含真实地址/私钥格式样式的语料被标记 → `tests/test_redlines.py::test_r6_validate_flags_operational_redteam_corpus`
 - [x] AC-02e 未知断言类型 / 未知 user_script 事件名被拒 → `tests/test_validate.py::test_unknown_assertion_type_rejected`
-- [x] AC-02f `oh validate` CLI 退出码与错误报文契约 → `tests/test_cli.py::test_validate_exit_codes`
+- [x] AC-02f `assay validate` CLI 退出码与错误报文契约 → `tests/test_cli.py::test_validate_exit_codes`
 
 ### FP03 · Mock 交易所环境（M1）
 
@@ -179,16 +179,16 @@ FP04 只负责在元数据中定义不可逆判定接口，由 AC-04d 验收。
 
 ### FP06 · A 族任务集（12 条）与 M1 端到端（M1）
 
-范围：`tasks/a/A01–A12.yaml`（第 8 节 A 族表）、任务全部过 `oh validate`、
-`oh run` 命令（--model/--family/--env/--task/--out）、结果 JSON 落盘（含 R11 指纹）、
+范围：`tasks/a/A01–A12.yaml`（第 8 节 A 族表）、任务全部过 `assay validate`、
+`assay run` 命令（--model/--family/--env/--task/--out）、结果 JSON 落盘（含 R11 指纹）、
 scripted provider 跑通全生命周期（AC1.4）、≥1 真实模型端到端（AC1.5）。
-注：M1 阶段结果 JSON 含轨迹+终态+指纹，pass/fail 评分待 FP07 断言引擎落地后由 `oh score` 回填（见第 5 节问题 Q1，待 Owner 确认）。
-此为**过渡形态**：FP08 交付时评分流水线并入 `oh run`，恢复 KICKOFF 第 3/12 节「run 内已含评分」契约（由 AC-08g 验收）。
+注：M1 阶段结果 JSON 含轨迹+终态+指纹，pass/fail 评分待 FP07 断言引擎落地后由 `assay score` 回填（见第 5 节问题 Q1，待 Owner 确认）。
+此为**过渡形态**：FP08 交付时评分流水线并入 `assay run`，恢复 KICKOFF 第 3/12 节「run 内已含评分」契约（由 AC-08g 验收）。
 
-- [x] AC-06a A01–A12 全部通过 `oh validate` → `tests/test_tasks_a.py::test_a_family_passes_validate`
+- [x] AC-06a A01–A12 全部通过 `assay validate` → `tests/test_tasks_a.py::test_a_family_passes_validate`
 - [x] AC-06b scripted provider 跑通 A01 全生命周期（加载→环境→循环→终止→落盘）→ `tests/test_e2e.py::test_scripted_a01_full_episode`
 - [x] AC-06c 结果 JSON 含全部指纹字段且通过 ResultRecord 校验 → `tests/test_e2e.py::test_result_json_fingerprint_complete`
-- [x] AC-06d `oh run --task` / `--family` 过滤行为正确 → `tests/test_cli.py::test_run_task_and_family_filters`
+- [x] AC-06d `assay run --task` / `--family` 过滤行为正确 → `tests/test_cli.py::test_run_task_and_family_filters`
 - [ ] AC-06e【integration】≥1 真实模型（litellm）在 mock 上跑完 A 族 12 任务并落盘 → `tests/test_e2e.py::test_real_model_a_family_smoke`（无 key 时 skip；正式验收由 Owner 跑一次记录 run_id）
 
 ### FP07 · 断言引擎（M2）
@@ -207,17 +207,17 @@ scripted provider 跑通全生命周期（AC1.4）、≥1 真实模型端到端�
 
 范围：`scoring/judge.py`（LLM judge：按任务 judge_rubric 产出质量分 0–2 + 理由；输出类型**无 pass/fail 字段**——R3 的类型级保证）、
 `scoring/metrics.py`（9.2 节九项指标公式，infra_error 分母处理）、
-评分流水线编排（断言 → 轨迹统计 → judge → 结果 JSON）、`oh score <run_dir>` 离线重评（judge 模型可换）、
-回放一致性（R4 / AC2.5）。judge 挂接 `oh run` 的开关策略与 R4 比较口径见第 5 节 Q5
-（建议：scripted / 回放测试场景默认关闭 judge，judge 分由 `oh score` 离线补跑）。
+评分流水线编排（断言 → 轨迹统计 → judge → 结果 JSON）、`assay score <run_dir>` 离线重评（judge 模型可换）、
+回放一致性（R4 / AC2.5）。judge 挂接 `assay run` 的开关策略与 R4 比较口径见第 5 节 Q5
+（建议：scripted / 回放测试场景默认关闭 judge，judge 分由 `assay score` 离线补跑）。
 
 - [x] AC-08a judge 输出为结构化对象（质量分 0–2 + 理由），类型上无 pass/fail 字段 → `tests/test_redlines.py::test_r3_judge_output_type_has_no_passfail`
 - [x] AC-08b 断言 fail 的任务经 judge 后仍 fail（流水线级测试）→ `tests/test_redlines.py::test_r3_failed_assertion_stays_failed_after_judge`
 - [x] AC-08c 九项指标公式按 9.2 实现，黄金用例覆盖（含 infra_error 不入 Task Success Rate 分母、单列统计）→ `tests/test_metrics.py::test_task_success_rate_excludes_infra_error`、`::test_tool_calling_accuracy`、`::test_param_hallucination_rate`、`::test_unsafe_action_rate`、`::test_overreach_rate`、`::test_clarification_rate`、`::test_over_refusal_rate`、`::test_judge_quality_mean`、`::test_cost_latency_aggregation`
-- [x] AC-08d `oh score` 对既有 run 目录离线重评，judge 模型可配置替换 → `tests/test_cli.py::test_score_offline_rescore`
+- [x] AC-08d `assay score` 对既有 run 目录离线重评，judge 模型可配置替换 → `tests/test_cli.py::test_score_offline_rescore`
 - [x] AC-08e R4 回放一致性：scripted provider 下同任务两次运行，结果文件逐字节一致；比较在 judge 关闭态下进行（不得依赖 AC-08f 的失败降级路径获得确定性），易变指纹字段（时间戳、墙钟）按 Q5 白名单剥离 → `tests/test_redlines.py::test_r4_scripted_replay_byte_identical`
 - [x] AC-08f judge 调用走 litellm 且失败可降级为「跳过 judge、断言分保留」→ `tests/test_judge.py::test_judge_failure_degrades_gracefully`
-- [x] AC-08g 评分内联回归：FP08 交付后 `oh run` 产出的结果 JSON 直接含 pass/fail、断言明细与（开启时的）judge 质量分，无需先跑 `oh score` → `tests/test_e2e.py::test_run_output_includes_scores`
+- [x] AC-08g 评分内联回归：FP08 交付后 `assay run` 产出的结果 JSON 直接含 pass/fail、断言明细与（开启时的）judge 质量分，无需先跑 `assay score` → `tests/test_e2e.py::test_run_output_includes_scores`
 
 ### FP09 · B 族（10 条）+ C 族（14 条）任务集（M2）
 
@@ -237,12 +237,12 @@ C09 的断言写法待 Q4 定案；估值类任务（B02/B06）取价口径与 f
 
 ### FP10 · MCP server（M3，可与 FP07–09 并行）
 
-范围：`mcp_server.py` + `oh serve-mcp --env --fixture --mandate`（stdio，官方 `mcp` SDK / FastMCP），
+范围：`mcp_server.py` + `assay serve-mcp --env --fixture --mandate`（stdio，官方 `mcp` SDK / FastMCP），
 工具集从 registry 反射生成（R7），外部客户端接入操作说明 `docs/mcp-usage.md`。
 
 - [x] AC-10a MCP 暴露的工具 schema 与 registry 逐字段一致 → `tests/test_redlines.py::test_r7_mcp_schemas_match_registry`
 - [x] AC-10b stdio 客户端完成一次真实工具调用往返（用 mcp SDK 测试客户端）→ `tests/test_mcp_server.py::test_stdio_tool_call_roundtrip`
-- [x] AC-10c `oh serve-mcp` 参数（env/fixture/mandate）生效 → `tests/test_mcp_server.py::test_serve_mcp_flags`
+- [x] AC-10c `assay serve-mcp` 参数（env/fixture/mandate）生效 → `tests/test_mcp_server.py::test_serve_mcp_flags`
 - [ ] AC-10d【人工】外部 MCP 客户端（如 Claude Desktop）接入并完成一次工具调用，操作说明与截图/记录入 `docs/mcp-usage.md`（AC3.4）——底稿已备好（docs/mcp-usage.md 验收记录节），待 Owner 实操后勾选
 
 ### FP11 · Testnet 集成模式（M3，可与 FP07–09 并行）
@@ -251,7 +251,7 @@ C09 的断言写法待 Q4 定案；估值类任务（B02/B06）取价口径与 f
 URL 白名单接入 R1 网络层、`env: both` 任务抽样（约 8 条 A/B 族，抽样清单由本包定稿）、断言放宽为结构正确性、
 `withdraw` 返回 `simulated: true` 模拟回执、网络失败优雅降级（明确报错提示改用 mock）。
 **依赖说明**：AC-11a–11d 仅需 FP03/FP04（含 FP01 网络层），可先行交付并与 FP07–09 并行；
-AC-11e 需 FP06（runner + `oh run` + A 族语料）与 FP09（B 族语料）入库后编写，是本包最后一条。
+AC-11e 需 FP06（runner + `assay run` + A 族语料）与 FP09（B 族语料）入库后编写，是本包最后一条。
 
 - [x] AC-11a testnet client 仅访问 `testnet.binance.vision`，经集中网络层 → `tests/test_redlines.py::test_r1_testnet_client_uses_whitelisted_base`（D-i 结构化剪枝：白名单外条目构造期删除）
 - [x] AC-11b key 缺失时报错提示环境变量名，不接受任何其他来源 → `tests/test_testnet.py::test_keys_only_from_env`
@@ -261,7 +261,7 @@ AC-11e 需 FP06（runner + `oh run` + A 族语料）与 FP09（B 族语料）入
 
 ### FP12 · 报告、三模型跑分与发布（M3）
 
-范围：`report/`（leaderboard 表 + 六维雷达图，matplotlib，色盲友好）、`oh report <run_dir...>` 多 run 对比、
+范围：`report/`（leaderboard 表 + 六维雷达图，matplotlib，色盲友好）、`assay report <run_dir...>` 多 run 对比、
 数字与结果 JSON 可对账、≥3 模型全量 36 任务跑分入 `docs/sample-report/`、
 双语 README（第 15 节结构 + R12 声明）、发布检查清单执行、仓库转 public。
 对 FP10/FP11 的依赖是内容与发布层面（README 须含 MCP 用法与 Testnet 模式章节、
@@ -280,7 +280,7 @@ pytest 全绿覆盖 FP10/11 测试、AC3.6 全项通过后转 public），非 `r
 
 | KICKOFF AC | 内容摘要 | 落地特性包 | 关键测试 |
 |-----------|---------|-----------|---------|
-| AC1.1 | `oh validate` 通过全部已写任务/fixture/mandate | FP02（引擎）+ FP06/FP09（语料） | `test_validate.py`、`test_tasks_a.py` |
+| AC1.1 | `assay validate` 通过全部已写任务/fixture/mandate | FP02（引擎）+ FP06/FP09（语料） | `test_validate.py`、`test_tasks_a.py` |
 | AC1.2 | mock 撮合符合第 10 节 + invariant | FP03 | `test_mock_env.py` 全部 |
 | AC1.3 | 12 工具 + 双层校验 | FP04 | `test_registry.py` 全部 |
 | AC1.4 | scripted 跑通 A 族任一任务 | FP05 + FP06 | `test_e2e.py::test_scripted_a01_full_episode` |
@@ -318,10 +318,10 @@ A 族可缩至 8 条、C 族可缩至 10 条（保留 C13/C14 对照组），FP1
 
 **Q1 — AC1.5「端到端」与断言引擎（M2）的时序。**
 KICKOFF 把断言引擎放在 M2（AC2.1），但 M1 的 AC1.5 要求 A 族「端到端执行并产出结果 JSON」。两种理解：
-(a) M1 结果 JSON 只含轨迹 + 终态 + 指纹，pass/fail 留空，FP07 落地后用 `oh score` 回填评分；
+(a) M1 结果 JSON 只含轨迹 + 终态 + 指纹，pass/fail 留空，FP07 落地后用 `assay score` 回填评分；
 (b) 把 A 族所需断言子集（约 10 种，接近全集）提前进 M1。
 **建议 (a)**：尊重 KICKOFF 里程碑划分，周末 1 体量可控。注意 (a) 仅为 M1 过渡形态：
-FP08 交付时评分流水线并入 `oh run`，恢复 KICKOFF 第 3/12 节「run 内已含评分」契约（由 AC-08g 验收）——
+FP08 交付时评分流水线并入 `assay run`，恢复 KICKOFF 第 3/12 节「run 内已含评分」契约（由 AC-08g 验收）——
 请在答复 Q1 时一并确认这一终态。本文件按 (a) 编写，如选 (b) 我会把 FP07 拆一半进 M1。
 
 **Q2 — 三个跑分模型与 judge 模型的选型。**
@@ -348,9 +348,9 @@ FP08 Overreach「超限额」判定口径、FP05 mandate 注入模板文案（�
 定案后写死进 C09 任务 YAML，并在 README 任务集设计处说明，避免与 C03 混读。
 
 **Q5 — R4「逐字节一致」的比较范围：时间戳与 judge 非确定性。**
-结果文件必含时间戳（R11），两次运行必然不同；且若 `oh run` 默认内置 LLM judge（第 3/12 节生命周期），
+结果文件必含时间戳（R11），两次运行必然不同；且若 `assay run` 默认内置 LLM judge（第 3/12 节生命周期），
 judge 是网络调用、输出不保证确定，与 D7「测试套件离线、无 key 可跑」和 R4 字面均冲突。
-**建议**：① `oh run` 提供 judge 开关，scripted provider / 回放测试下默认关闭，judge 分由 `oh score`
+**建议**：① `assay run` 提供 judge 开关，scripted provider / 回放测试下默认关闭，judge 分由 `assay score`
 离线补跑（与第 16 节「judge 只跑一遍、可离线重评」天然吻合）；② R4 比较范围 = 程序断言结果 + 轨迹 +
 过程指标，剥离易变指纹字段（时间戳、墙钟延迟），易变字段白名单写死在测试里防止范围悄悄扩大；
 judge 字段不参与逐字节比较。如你有别的口径（如比较轨迹哈希），请指出。
@@ -389,7 +389,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 ## 6. 进度勾选（特性包级）
 
 - [x] FP01 · 项目脚手架与领域模型（2026-07-23，10 tests green）
-- [x] FP02 · 任务加载与 `oh validate`（2026-07-23，19 tests green）
+- [x] FP02 · 任务加载与 `assay validate`（2026-07-23，19 tests green）
 - [x] FP03 · Mock 交易所环境（2026-07-23，32 tests green）
 - [x] FP04 · 工具注册表（2026-07-23，39 tests green）
 - [x] FP05 · Runner、Provider 与用户模拟器（2026-07-23，51 tests green）
@@ -399,7 +399,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 - [x] FP09 · B/C 族任务集（2026-07-23，112 tests green；AC-09c Owner 签核 2026-07-24）—— **M2 完成线**
 - [x] FP10 · MCP server（2026-07-24，117 tests green；AC-10d 人工项待 Owner 外部客户端实操）
 - [x] FP11 · Testnet 集成（2026-07-24，144 tests green；AC-11e 冒烟待 Owner testnet key 实跑）
-- [ ] FP12 · 报告与发布 —— **M3 完成线 / v0.1 发布**（2026-07-24 代码侧完成：AC-12a–c，148 tests green，`oh report` 端到端可用；剩 AC-12d 三模型跑分【Q2 阻塞】、AC-12e README 终审、AC-12f 发布清单）
+- [ ] FP12 · 报告与发布 —— **M3 完成线 / v0.1 发布**（2026-07-24 代码侧完成：AC-12a–c，148 tests green，`assay report` 端到端可用；剩 AC-12d 三模型跑分【Q2 阻塞】、AC-12e README 终审、AC-12f 发布清单）
 
 勾选纪律（R10）：特性包的全部 AC 测试绿 + Owner 对「人工」项签字后，方可打勾；
 勾选 commit 与特性包最后一个实现 commit 分开，便于审计。

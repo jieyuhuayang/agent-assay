@@ -2,7 +2,7 @@
 
 from decimal import Decimal
 
-from open_harness.tasks.loader import load_fixture, load_mandate, load_task
+from agent_assay.tasks.loader import load_fixture, load_mandate, load_task
 
 
 def test_task_yaml_roundtrip(repo_factory):

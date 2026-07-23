@@ -1,4 +1,4 @@
-# CLAUDE.md — Open Harness
+# CLAUDE.md — AgentAssay
 
 本仓库采用规格驱动开发（SDD）。最高事实来源：specs/ 目录（源头为 KICKOFF 文档）。
 
@@ -11,4 +11,4 @@
 6. commit 规范：feat|fix|test|docs(scope): 摘要；一个特性包一串连续 commit。
 
 ## 常用命令
-uv sync / uv run pytest / uv run oh validate / uv run oh run --env mock --model scripted
+uv sync / uv run pytest / uv run assay validate / uv run assay run --env mock --model scripted

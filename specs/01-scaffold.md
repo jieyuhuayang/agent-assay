@@ -10,7 +10,7 @@
 ## 模块布局（第 12 节目录树的 FP01 子集）
 
 ```
-src/open_harness/
+src/agent_assay/
 ├── __init__.py          # __version__
 ├── money.py             # Money 类型：Decimal-only（R9）
 ├── secrets.py           # get_secret / redact（R2）
@@ -37,7 +37,7 @@ src/open_harness/
   trajectory/final_state/scoring 先留宽类型，FP05/FP07/FP08 收紧（M1 过渡形态 scoring=None，Q1(a)）。
 - **AssertionSpec**：YAML 键 `assert` 是 Python 关键字 → 字段 `kind` + alias `"assert"`；
   合法断言类型全集（7.2 节）以 `FINAL_STATE_ASSERTIONS` / `TRAJECTORY_ASSERTIONS` 常量定义，FP02 validate 消费。
-- **R9 lint 范围**：AST 扫描 `src/open_harness` 全部模块，禁止 float 字面量与 `float()` 调用；
+- **R9 lint 范围**：AST 扫描 `src/agent_assay` 全部模块，禁止 float 字面量与 `float()` 调用；
   豁免名单 = `report/`（matplotlib 坐标）与 `agent/providers.py`（litellm temperature 参数）。
 - KICKOFF 文档含非公开背景（1.4），**加入 .gitignore 不入仓库**；specs/ 为仓库内事实源。
 

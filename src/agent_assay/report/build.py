@@ -247,7 +247,7 @@ def build_report(
     _render_radar(overlay, [(r.label, values_by_label[r.label]) for r in runs])
 
     parts = [
-        "# Open Harness — 评测报告 / Evaluation Report",
+        "# AgentAssay — 评测报告 / Evaluation Report",
         "",
         f"- runs: {', '.join(r.label for r in runs)}",
         f"- tasks per run: {[len(r.rows) for r in runs]}",

@@ -1,6 +1,6 @@
 """AC-02b / AC-02e：引用完整性与未知断言类型。"""
 
-from open_harness.tasks.validate import validate_repo
+from agent_assay.tasks.validate import validate_repo
 
 
 def _codes(report):

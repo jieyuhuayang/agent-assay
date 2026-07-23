@@ -1,11 +1,11 @@
-# Open Harness
+# AgentAssay
 
 **首个面向交易所 Agent 的「受托执行」（fiduciary execution）评测基准。**
 
 [English README](README.md)
 
 交易所 Agent 已经开始替真人执行真金白银的指令。现有基准大多只问「模型会不会正确调工具」；
-Open Harness 问的是钱真正流动时更要紧的问题：**Agent 是否在明确授权书（Mandate）边界内
+AgentAssay 问的是钱真正流动时更要紧的问题：**Agent 是否在明确授权书（Mandate）边界内
 忠实、尽职地执行？** 每个回合都在确定性 mock 交易所中、带着一份授权书（支出限额 / 资产
 白名单 / 提币地址白名单 / 确认策略）运行，评分同时覆盖两半：
 
@@ -20,19 +20,19 @@ Open Harness 问的是钱真正流动时更要紧的问题：**Agent 是否在�
 
 ## 榜单
 
-*随 v0.1 发布——`oh report` 生成 leaderboard 表与六维雷达图
+*随 v0.1 发布——`assay report` 生成 leaderboard 表与六维雷达图
 （A/B 成功率、C 安全合规、工具调用准确率、澄清恰当性、效率）。*
 
 ## 快速上手（mock，约 5 分钟）
 
 ```bash
-git clone <repo-url> && cd open-harness
+git clone <repo-url> && cd agent-assay
 uv sync                                        # Python 3.11+，https://docs.astral.sh/uv/
-uv run oh validate                             # 语料全量 lint
-uv run oh run --env mock --model scripted --family a   # 确定性黄金回放
-uv run oh run --env mock --model <litellm 模型名>       # 给真实模型跑分
-uv run oh score results/<run_dir> --judge-model <m>    # 离线（重）评分 + LLM judge
-uv run oh report results/<run_dir> [...更多 run]        # 榜单 + 雷达 SVG
+uv run assay validate                             # 语料全量 lint
+uv run assay run --env mock --model scripted --family a   # 确定性黄金回放
+uv run assay run --env mock --model <litellm 模型名>       # 给真实模型跑分
+uv run assay score results/<run_dir> --judge-model <m>    # 离线（重）评分 + LLM judge
+uv run assay report results/<run_dir> [...更多 run]        # 榜单 + 雷达 SVG
 ```
 
 结果为逐任务 JSON，带完整指纹（模型版本 / 任务集版本 / git commit）；scripted 回放
@@ -70,7 +70,7 @@ uv run oh report results/<run_dir> [...更多 run]        # 榜单 + 雷达 SVG
 等外部客户端接入：
 
 ```bash
-uv run oh serve-mcp --fixture fixtures/std_account_1.yaml --mandate mandates/std_conservative.yaml
+uv run assay serve-mcp --fixture fixtures/std_account_1.yaml --mandate mandates/std_conservative.yaml
 ```
 
 授权书经 MCP `instructions` 注入；工具 schema 从唯一事实源 registry 反射。
@@ -78,7 +78,7 @@ uv run oh serve-mcp --fixture fixtures/std_account_1.yaml --mandate mandates/std
 
 ## Testnet 模式
 
-`oh run --env testnet` 对标了 `env: both` 的 8 条 A/B 抽样任务，在 Binance **Spot
+`assay run --env testnet` 对标了 `env: both` 的 8 条 A/B 抽样任务，在 Binance **Spot
 Testnet**（假资金）上做真实性/API 兼容性验证：只做结构评分、结果不进榜单、`withdraw`
 恒为模拟回执；唯一可触达的交易所域名是 `testnet.binance.vision`（构造期剪枝 + 红线
 测试双重保证）。API key 只从环境变量 `OH_TESTNET_API_KEY` / `OH_TESTNET_API_SECRET` 读取。

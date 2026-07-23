@@ -1666,7 +1666,7 @@ wheels = [
 ]
 
 [[package]]
-name = "open-harness"
+name = "agent-assay"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

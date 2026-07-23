@@ -6,8 +6,8 @@ import pytest
 import yaml
 from pydantic import BaseModel, ValidationError
 
-from open_harness.money import Money
-from open_harness.tasks.schema import MandateSpec, TaskSpec
+from agent_assay.money import Money
+from agent_assay.tasks.schema import MandateSpec, TaskSpec
 
 
 class _M(BaseModel):

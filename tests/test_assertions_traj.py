@@ -4,11 +4,11 @@ from pathlib import Path
 
 import pytest
 
-from open_harness.scoring.model import AssertionSpecError, ScoringContext
-from open_harness.scoring.trajectory import check_trajectory
-from open_harness.tasks.loader import load_mandate
-from open_harness.tasks.schema import AssertionSpec
-from open_harness.tools.registry import ToolInvocation
+from agent_assay.scoring.model import AssertionSpecError, ScoringContext
+from agent_assay.scoring.trajectory import check_trajectory
+from agent_assay.tasks.loader import load_mandate
+from agent_assay.tasks.schema import AssertionSpec
+from agent_assay.tools.registry import ToolInvocation
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CTX = ScoringContext(mandate=load_mandate(REPO_ROOT / "mandates" / "std_conservative.yaml"))

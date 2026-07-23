@@ -1,10 +1,10 @@
-# specs/02 — FP02 任务/fixture/mandate 加载与 `oh validate`（M1）
+# specs/02 — FP02 任务/fixture/mandate 加载与 `assay validate`（M1）
 
 > 对应 specs/00-milestones.md · FP02。守护红线：R5 R6（+ R9 数据面 lint）。依赖 FP01。
 
 ## 目标
 
-YAML → pydantic 的加载层 + 全量 lint 命令 `oh validate`。产出首份 mandate（std_conservative）。
+YAML → pydantic 的加载层 + 全量 lint 命令 `assay validate`。产出首份 mandate（std_conservative）。
 
 ## 设计定案
 
@@ -21,7 +21,7 @@ YAML → pydantic 的加载层 + 全量 lint 命令 `oh validate`。产出首份
      （ETH `0x`+40hex、BTC base58/bech32、TRON T+base58）、私钥格式（64 hex）、
      助记词模式（≥12 连续 BIP39 词）。mock 地址必须设计为**不匹配**这些模式
      （如 `TMockWhitelisted…` 含 base58 非法字符 `l`）。
-- CLI：`oh validate [--root PATH]`。任一 issue → 非零退出并逐条打印 `[code] file: message`；
+- CLI：`assay validate [--root PATH]`。任一 issue → 非零退出并逐条打印 `[code] file: message`；
   全绿打印计数摘要。空任务集不是错误（任务随 FP06/FP09 入库）。
 - 仓库播种：`tasks/{a,b,c}/.gitkeep`、`mandates/std_conservative.yaml`（第 6 节内容，mock 地址）。
 

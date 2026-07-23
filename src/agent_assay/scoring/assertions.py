@@ -135,7 +135,7 @@ def _check_balance(
         free = as_decimal(entry.get("free"))
         locked = as_decimal(entry.get("locked"))
         if free is None or locked is None:
-            # 存量结果文件损坏：结构化 fail，不炸整个 oh score
+            # 存量结果文件损坏：结构化 fail，不炸整个 assay score
             return _result(spec, False, f"终态 balances[{params.asset}] 数据非法", params)
     try:
         actual = {"total": free + locked, "free": free, "locked": locked}[params.field]

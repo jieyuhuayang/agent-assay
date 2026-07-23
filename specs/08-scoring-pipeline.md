@@ -8,7 +8,7 @@
 - `scoring/judge.py`：LLM judge（唯二允许模型出站的模块之二，D-a）
 - `scoring/metrics.py`：九项指标公式（纯函数，输入任务级行数据）
 - `scoring/pipeline.py`：编排（断言 → 轨迹统计 → judge）→ `scoring` dict
-- `cli.py`：`oh score <run_dir>` + `oh run` 内联评分（AC-08g）
+- `cli.py`：`assay score <run_dir>` + `assay run` 内联评分（AC-08g）
 - `agent/providers.py` / `runner.py`：补 token 用量采集（Cost 指标的数据源）
 
 ## Judge（R3：类型级不可推翻）
@@ -87,15 +87,15 @@ scripted 恒 None）；runner 逐步累加写入 `timing.tokens`（timing 属 Q5
 
 ## CLI
 
-- `oh score <run_dir> [--judge-model M] [--root DIR]`：对 run 目录内每个 `<task_id>.json`
+- `assay score <run_dir> [--judge-model M] [--root DIR]`：对 run 目录内每个 `<task_id>.json`
   重建 ctx（task → mandate + fixture.rules）→ `score_episode` → 覆写 scoring 字段（save_result，R2）；
   judge 模型可替换 = 离线重评（AC-08d）；断言/统计部分幂等确定。
-- `oh run`：episode 结束后内联评分（AC-08g，恢复 KICKOFF 第 3/12 节契约）；`--judge-model` 缺省
+- `assay run`：episode 结束后内联评分（AC-08g，恢复 KICKOFF 第 3/12 节契约）；`--judge-model` 缺省
   不跑 judge（Q5）；`--env testnet` 行为不变（FP11 前报错）。
 
 ## R4 回放一致性（AC-08e）
 
-scripted provider 下同任务两次 `oh run` 的结果文件，剥离易变白名单后逐字节一致。
+scripted provider 下同任务两次 `assay run` 的结果文件，剥离易变白名单后逐字节一致。
 白名单**写死在测试里**：`fingerprint.timestamp`、`timing`（含墙钟与 token 计数）。
 比较法：两份 JSON 解析 → 删除白名单字段 → `json.dumps(sort_keys=True)` → 字节相等。
 judge 关闭态（scripted 缺省即关闭），不依赖 AC-08f 降级路径。

@@ -15,13 +15,13 @@ import pytest
 from pydantic import ValidationError
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SRC_ROOT = REPO_ROOT / "src" / "open_harness"
+SRC_ROOT = REPO_ROOT / "src" / "agent_assay"
 
 # ---------------------------------------------------------------- R1 ----
 
 
 def test_r1_url_whitelist_blocks_mainnet():
-    from open_harness.net import ForbiddenHostError, check_url
+    from agent_assay.net import ForbiddenHostError, check_url
 
     ok = "https://testnet.binance.vision/api/v3/order"
     assert check_url(ok) == ok
@@ -136,7 +136,7 @@ def test_r2_no_secrets_in_repo_files():
 
 
 def test_r2_api_key_only_from_env(monkeypatch):
-    from open_harness import secrets
+    from agent_assay import secrets
 
     monkeypatch.setenv(secrets.TESTNET_API_KEY_ENV, "unit-test-key-value-123")
     assert secrets.get_secret(secrets.TESTNET_API_KEY_ENV) == "unit-test-key-value-123"
@@ -179,8 +179,8 @@ def test_r9_no_float_in_money_paths():
 
 def test_r12_report_and_readme_contain_disclaimer(tmp_path):
     """AC-12c/R12：生成的报告与双语 README 都含「模拟环境 / 非投资建议 / 勿用真实资金」。"""
-    from open_harness.report.build import build_report
-    from open_harness.results import Fingerprint, ResultRecord, save_result
+    from agent_assay.report.build import build_report
+    from agent_assay.results import Fingerprint, ResultRecord, save_result
 
     for readme, needles in (
         (REPO_ROOT / "README.md", ("mock", "not investment advice", "real funds")),
@@ -218,7 +218,7 @@ def test_r12_report_and_readme_contain_disclaimer(tmp_path):
 
 
 def test_r11_result_schema_requires_fingerprint():
-    from open_harness.results import Fingerprint, ResultRecord
+    from agent_assay.results import Fingerprint, ResultRecord
 
     # 无指纹不可构造
     with pytest.raises(ValidationError):
@@ -249,7 +249,7 @@ def test_r11_result_schema_requires_fingerprint():
 
 
 def test_r5_validate_rejects_judge_only_task(repo_factory):
-    from open_harness.tasks.validate import validate_repo
+    from agent_assay.tasks.validate import validate_repo
 
     judge_only = """
     id: C01
@@ -268,7 +268,7 @@ def test_r5_validate_rejects_judge_only_task(repo_factory):
 
 
 def test_r6_validate_flags_operational_redteam_corpus(repo_factory):
-    from open_harness.tasks.validate import scan_r6, validate_repo
+    from agent_assay.tasks.validate import scan_r6, validate_repo
 
     # 真实模式必须被拦：ETH 地址 / TRON 地址 / 64hex 私钥 / 助记词跑长
     eth = "0x" + "a1b2c3d4e5" * 4
@@ -331,8 +331,8 @@ def test_r1_testnet_client_uses_whitelisted_base(monkeypatch):
 
     构造不发包（markets 懒加载），可离线跑；剪枝语义见 specs/11 D-i。
     """
-    from open_harness.env.testnet import TestnetExchangeEnv
-    from open_harness.net import check_url
+    from agent_assay.env.testnet import TestnetExchangeEnv
+    from agent_assay.net import check_url
 
     monkeypatch.setenv("OH_TESTNET_API_KEY", "dummy-key-123456")
     monkeypatch.setenv("OH_TESTNET_API_SECRET", "dummy-secret-123456")
@@ -347,8 +347,8 @@ def test_r1_testnet_client_uses_whitelisted_base(monkeypatch):
 
 def test_r7_mcp_schemas_match_registry():
     """AC-10a：MCP 暴露的工具与 registry 数量、顺序、name/description/inputSchema 逐字段一致。"""
-    from open_harness.mcp_server import build_mcp_tools
-    from open_harness.tools.registry import all_tools
+    from agent_assay.mcp_server import build_mcp_tools
+    from agent_assay.tools.registry import all_tools
 
     mcp_tools = build_mcp_tools()
     defs = all_tools()
@@ -360,7 +360,7 @@ def test_r7_mcp_schemas_match_registry():
 
 def test_r2_logs_and_results_redact_secrets(monkeypatch, tmp_path):
     """FP05：结果落盘唯一路径 save_result 必过脱敏。"""
-    from open_harness.results import Fingerprint, ResultRecord, save_result
+    from agent_assay.results import Fingerprint, ResultRecord, save_result
 
     secret = "leak-me-supersecret-42"
     monkeypatch.setenv("OH_TESTNET_API_SECRET", secret)
@@ -393,11 +393,11 @@ def test_r8_confirm_assertion_reads_only_tool_metadata():
     构造与工具名语义相悖的快照：引擎若按快照走而非按工具名/参数推断，即证明
     其不携带任何自有工具语义。
     """
-    from open_harness.scoring.model import ScoringContext
-    from open_harness.scoring.trajectory import check_trajectory
-    from open_harness.tasks.loader import load_mandate
-    from open_harness.tasks.schema import AssertionSpec
-    from open_harness.tools.registry import ToolInvocation
+    from agent_assay.scoring.model import ScoringContext
+    from agent_assay.scoring.trajectory import check_trajectory
+    from agent_assay.tasks.loader import load_mandate
+    from agent_assay.tasks.schema import AssertionSpec
+    from agent_assay.tools.registry import ToolInvocation
 
     ctx = ScoringContext(
         mandate=load_mandate(REPO_ROOT / "mandates" / "std_conservative.yaml")
@@ -430,7 +430,7 @@ def test_r3_judge_output_type_has_no_passfail():
     import pydantic
     import pytest
 
-    from open_harness.scoring.judge import JudgeVerdict
+    from agent_assay.scoring.judge import JudgeVerdict
 
     assert set(JudgeVerdict.model_fields) == {"quality", "rationale"}
     with pytest.raises(pydantic.ValidationError):  # extra=forbid：塞裁决字段直接被拒
@@ -441,13 +441,13 @@ def test_r3_failed_assertion_stays_failed_after_judge(monkeypatch):
     """R3（流水线级）：断言 fail 的任务，judge 给满分也仍 fail。"""
     from types import SimpleNamespace
 
-    from open_harness.results import Fingerprint as Fp
-    from open_harness.results import ResultRecord as RR
-    from open_harness.scoring import judge as judge_mod
-    from open_harness.scoring.model import ScoringContext
-    from open_harness.scoring.pipeline import score_episode
-    from open_harness.tasks.loader import load_mandate
-    from open_harness.tasks.schema import AssertionSpec, ExpectedSpec, TaskSpec
+    from agent_assay.results import Fingerprint as Fp
+    from agent_assay.results import ResultRecord as RR
+    from agent_assay.scoring import judge as judge_mod
+    from agent_assay.scoring.model import ScoringContext
+    from agent_assay.scoring.pipeline import score_episode
+    from agent_assay.tasks.loader import load_mandate
+    from agent_assay.tasks.schema import AssertionSpec, ExpectedSpec, TaskSpec
 
     monkeypatch.setattr(
         judge_mod, "_litellm_completion",
@@ -488,7 +488,7 @@ def test_r4_scripted_replay_byte_identical(tmp_path):
 
     from typer.testing import CliRunner
 
-    from open_harness.cli import app
+    from agent_assay.cli import app
 
     runner = CliRunner()
     payloads = []

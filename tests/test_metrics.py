@@ -1,6 +1,6 @@
 """AC-08c：九项指标公式（KICKOFF 9.2 + specs/00 D-c 任务级分母口径）黄金用例。"""
 
-from open_harness.scoring.metrics import TaskScore, compute_metrics
+from agent_assay.scoring.metrics import TaskScore, compute_metrics
 
 
 def row(**kw):

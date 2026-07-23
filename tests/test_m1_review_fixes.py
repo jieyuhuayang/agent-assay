@@ -7,18 +7,18 @@ from types import SimpleNamespace
 
 import pytest
 
-from open_harness.agent.providers import (
+from agent_assay.agent.providers import (
     LiteLLMProvider,
     ModelResponse,
     Provider,
     ProviderError,
     ToolCallRequest,
 )
-from open_harness.env.base import ExchangeError
-from open_harness.env.mock import MockExchangeEnv
-from open_harness.tasks.loader import load_fixture
-from open_harness.tasks.validate import scan_r6
-from open_harness.tools.registry import ToolContext, execute_tool
+from agent_assay.env.base import ExchangeError
+from agent_assay.env.mock import MockExchangeEnv
+from agent_assay.tasks.loader import load_fixture
+from agent_assay.tasks.validate import scan_r6
+from agent_assay.tools.registry import ToolContext, execute_tool
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
@@ -145,7 +145,7 @@ def test_malformed_response_raises_provider_error():
 
 
 def test_assistant_message_protocol():
-    from open_harness.agent.runner import _assistant_message
+    from agent_assay.agent.runner import _assistant_message
 
     # 空响应：content 归一为字符串
     empty = _assistant_message(ModelResponse(text=None, tool_calls=[]))

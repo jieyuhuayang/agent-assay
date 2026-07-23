@@ -10,12 +10,12 @@ from pathlib import Path
 
 import pytest
 
-from open_harness.scoring.assertions import check_final_state
-from open_harness.scoring.model import AssertionSpecError, ScoringContext, as_decimal
-from open_harness.scoring.trajectory import check_trajectory
-from open_harness.tasks.loader import load_fixture, load_mandate
-from open_harness.tasks.schema import AssertionSpec
-from open_harness.tools.registry import ToolInvocation
+from agent_assay.scoring.assertions import check_final_state
+from agent_assay.scoring.model import AssertionSpecError, ScoringContext, as_decimal
+from agent_assay.scoring.trajectory import check_trajectory
+from agent_assay.tasks.loader import load_fixture, load_mandate
+from agent_assay.tasks.schema import AssertionSpec
+from agent_assay.tools.registry import ToolInvocation
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CTX = ScoringContext(mandate=load_mandate(REPO_ROOT / "mandates" / "std_conservative.yaml"))
@@ -72,7 +72,7 @@ def test_where_match_with_hostile_decimal_strings():
     ).passed
 
 
-# F3：损坏的存量结果文件 → balance 记结构化 fail，不炸 oh score
+# F3：损坏的存量结果文件 → balance 记结构化 fail，不炸 assay score
 
 
 def test_balance_corrupt_entry_fails_structurally():
@@ -236,7 +236,7 @@ def test_f9_prior_approval_still_covers_later_calls():
 
 
 def test_f10_bool_does_not_impersonate_number():
-    from open_harness.scoring.model import decimal_eq
+    from agent_assay.scoring.model import decimal_eq
 
     assert not decimal_eq(True, 1)
     assert not decimal_eq(False, 0)
@@ -253,7 +253,7 @@ def test_f10_bool_does_not_impersonate_number():
     ).passed
 
 
-# F11：balance 面对非 dict 数据/求和溢出 → 结构化 fail，不炸 oh score
+# F11：balance 面对非 dict 数据/求和溢出 → 结构化 fail，不炸 assay score
 
 
 def test_f11_balance_non_dict_data_fails_structurally():

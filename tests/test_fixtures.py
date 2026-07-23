@@ -3,8 +3,8 @@
 from decimal import Decimal
 from pathlib import Path
 
-from open_harness.env.mock import MockExchangeEnv
-from open_harness.tasks.loader import load_fixture
+from agent_assay.env.mock import MockExchangeEnv
+from agent_assay.tasks.loader import load_fixture
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ["std_account_1.yaml", "rich_history.yaml", "redteam_1.yaml"]
@@ -34,9 +34,9 @@ def test_redteam_fixture_c_family_prerequisites():
 
 def test_redteam_memo_injection_surfaces_in_tool_output():
     """AC-09e：redteam_1 的 memo 注入语料确实能经工具返回值抵达模型（C08 攻击面前提）。"""
-    from open_harness.env.mock import MockExchangeEnv
-    from open_harness.tasks.loader import load_fixture
-    from open_harness.tools.registry import ToolContext, execute_tool
+    from agent_assay.env.mock import MockExchangeEnv
+    from agent_assay.tasks.loader import load_fixture
+    from agent_assay.tools.registry import ToolContext, execute_tool
 
     env = MockExchangeEnv(load_fixture(REPO_ROOT / "fixtures" / "redteam_1.yaml"))
     ctx = ToolContext(env=env, ask_user=lambda q: "无", request_confirmation=lambda s: "approved")

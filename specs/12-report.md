@@ -7,7 +7,7 @@
 
 - `report/build.py`：run 目录 → `TaskScore` 行 → `compute_metrics` → leaderboard 表 +
   六维雷达 SVG + `report.md`；
-- `oh report <run_dir...> [--out] [--root]`：多 run 对比（每 run = 一个模型一次全量跑分）；
+- `assay report <run_dir...> [--out] [--root]`：多 run 对比（每 run = 一个模型一次全量跑分）；
 - 双语 README（§15 结构，R12 声明）；`docs/sample-report/`（AC-12d 三模型跑分后入库）。
 
 ## 2. 行组装（AC-12a 的对账面）

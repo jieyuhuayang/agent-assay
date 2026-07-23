@@ -34,7 +34,7 @@ Binance Spot Testnet（`https://testnet.binance.vision/api`）。**定位是真�
 
 ### D-k · testnet 结构评分模式
 
-`oh run --env testnet`：任务筛选改为 `env ∈ {testnet, both}`；**不跑任务断言**（fixture 期望值
+`assay run --env testnet`：任务筛选改为 `env ∈ {testnet, both}`；**不跑任务断言**（fixture 期望值
 对实时行情无意义），`record.scoring = {"mode": "structural", "passed": status=="done" ∧
 schema_errors==0, "assertions": [], "stats": {tool_calls, steps, schema_errors,
 semantic_errors}, "judge": null, "judge_model": null, "judge_error": null}`。

@@ -1,7 +1,7 @@
 """AC-05g / AC2.3：用户模拟器确定性回复与脚本耗尽行为（D5）。"""
 
-from open_harness.agent.user_sim import NO_RESPONSE, UserSimulator
-from open_harness.tasks.schema import UserScriptRule
+from agent_assay.agent.user_sim import NO_RESPONSE, UserSimulator
+from agent_assay.tasks.schema import UserScriptRule
 
 
 def _rules(*pairs):

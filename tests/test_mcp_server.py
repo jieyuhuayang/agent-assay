@@ -1,6 +1,6 @@
 """FP10 · MCP server stdio 集成测试（AC-10b / AC-10c + specs/10 §5 补充项）。
 
-用 mcp SDK 的 stdio 客户端把 `python -m open_harness.cli serve-mcp` 拉成子进程，
+用 mcp SDK 的 stdio 客户端把 `python -m agent_assay.cli serve-mcp` 拉成子进程，
 走真实协议往返。测试保持同步函数 + asyncio.run，不引入 pytest-asyncio。
 """
 
@@ -19,7 +19,7 @@ def _server_params(*args: str):
 
     return StdioServerParameters(
         command=sys.executable,
-        args=["-m", "open_harness.cli", "serve-mcp", "--root", str(ROOT), *args],
+        args=["-m", "agent_assay.cli", "serve-mcp", "--root", str(ROOT), *args],
         cwd=str(ROOT),
     )
 

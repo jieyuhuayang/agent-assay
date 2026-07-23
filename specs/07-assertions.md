@@ -8,7 +8,7 @@
 - `scoring/model.py`：共享类型（ScoringContext / AssertionResult / AssertionsReport / AssertionSpecError）——FP08 的 judge/metrics 也复用
 - `scoring/assertions.py`：终态类检查 + 聚合入口 `evaluate_assertions`
 - `scoring/trajectory.py`：轨迹类检查
-- judge、九项指标、`oh score` 均属 FP08，本包不实现
+- judge、九项指标、`assay score` 均属 FP08，本包不实现
 
 ```python
 @dataclass(frozen=True)
@@ -20,7 +20,7 @@ def evaluate_assertions(task, trajectory, final_state, ctx) -> AssertionsReport
 ```
 
 - `trajectory: list[dict]`——ToolInvocation 的 `model_dump(mode="json")` 逐条记录
-  （引擎只吃 JSON 形态：`oh score` 从结果文件读入的与 run 内联评分的是同一形态，天然一致）
+  （引擎只吃 JSON 形态：`assay score` 从结果文件读入的与 run 内联评分的是同一形态，天然一致）
 - `final_state: dict | None`——`env.export_state()` 输出（balances / open_orders / new_trades / new_transfers）
 - `AssertionsReport = {passed: bool, results: [AssertionResult]}`；
   `AssertionResult = {kind, scope: final_state|trajectory, passed, detail, params}`

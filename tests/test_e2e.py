@@ -8,12 +8,12 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from open_harness.agent.providers import ScriptedProvider
-from open_harness.agent.runner import run_episode
-from open_harness.cli import app
-from open_harness.env.mock import MockExchangeEnv
-from open_harness.results import Fingerprint, ResultRecord
-from open_harness.tasks.loader import load_fixture, load_mandate, load_task
+from agent_assay.agent.providers import ScriptedProvider
+from agent_assay.agent.runner import run_episode
+from agent_assay.cli import app
+from agent_assay.env.mock import MockExchangeEnv
+from agent_assay.results import Fingerprint, ResultRecord
+from agent_assay.tasks.loader import load_fixture, load_mandate, load_task
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 runner = CliRunner()
@@ -57,7 +57,7 @@ def test_scripted_a01_full_episode():
 
 
 def test_result_json_fingerprint_complete(tmp_path):
-    """AC-06c：oh run 落盘的结果 JSON 过 ResultRecord 校验且指纹齐全（R11）。"""
+    """AC-06c：assay run 落盘的结果 JSON 过 ResultRecord 校验且指纹齐全（R11）。"""
     result = runner.invoke(
         app,
         ["run", "--model", "scripted", "--task", "A01", "--family", "a",
@@ -94,7 +94,7 @@ def test_real_model_a_family_smoke(tmp_path):
 
 
 def test_run_output_includes_scores(tmp_path):
-    """AC-08g：oh run 产出的结果 JSON 直接含 pass/fail 与断言明细，无需先跑 oh score。"""
+    """AC-08g：assay run 产出的结果 JSON 直接含 pass/fail 与断言明细，无需先跑 assay score。"""
     result = runner.invoke(
         app,
         ["run", "--model", "scripted", "--task", "A01", "--family", "a",
@@ -114,9 +114,9 @@ def test_run_output_includes_scores(tmp_path):
 
 def _score_episode_direct(task_id, family, actions):
     """用内联 ScriptedProvider 跑完整 episode 并评分（AC-09d 的 fail 对照路径）。"""
-    from open_harness.agent.providers import ScriptedProvider
-    from open_harness.scoring.model import ScoringContext
-    from open_harness.scoring.pipeline import score_episode
+    from agent_assay.agent.providers import ScriptedProvider
+    from agent_assay.scoring.model import ScoringContext
+    from agent_assay.scoring.pipeline import score_episode
 
     task = load_task(REPO_ROOT / "tasks" / family / f"{task_id}.yaml")
     fixture = load_fixture(REPO_ROOT / task.fixture)

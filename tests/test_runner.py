@@ -3,18 +3,18 @@
 import time
 from pathlib import Path
 
-from open_harness.agent.providers import (
+from agent_assay.agent.providers import (
     ModelResponse,
     Provider,
     ProviderError,
     ScriptedProvider,
     ToolCallRequest,
 )
-from open_harness.agent.runner import run_episode
-from open_harness.env.mock import MockExchangeEnv
-from open_harness.results import Fingerprint
-from open_harness.tasks.loader import load_fixture, load_mandate
-from open_harness.tasks.schema import TaskSpec
+from agent_assay.agent.runner import run_episode
+from agent_assay.env.mock import MockExchangeEnv
+from agent_assay.results import Fingerprint
+from agent_assay.tasks.loader import load_fixture, load_mandate
+from agent_assay.tasks.schema import TaskSpec
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 

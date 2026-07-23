@@ -2,7 +2,7 @@
 
 import sys
 
-from open_harness.agent.providers import ScriptedProvider
+from agent_assay.agent.providers import ScriptedProvider
 
 
 def test_scripted_provider_offline():

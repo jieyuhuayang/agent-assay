@@ -1,4 +1,4 @@
-"""`oh validate` 的检查引擎（FP02）。
+"""`assay validate` 的检查引擎（FP02）。
 
 检查项：schema / ref / r5 / assert-kind / float(R9 数据面) / r6（去可操作化）。
 详见 specs/02-validate.md。

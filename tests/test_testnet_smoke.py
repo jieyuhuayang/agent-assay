@@ -88,11 +88,11 @@ def test_sampled_tasks_structural():
     if not _HAS_KEYS:
         pytest.skip("缺 OH_TESTNET_API_KEY/OH_TESTNET_API_SECRET，跳过 testnet 冒烟")
 
-    from open_harness.agent.providers import ScriptedProvider
-    from open_harness.agent.runner import run_episode
-    from open_harness.env.testnet import TestnetExchangeEnv, TestnetUnavailableError
-    from open_harness.results import Fingerprint
-    from open_harness.tasks.loader import load_mandate, load_task
+    from agent_assay.agent.providers import ScriptedProvider
+    from agent_assay.agent.runner import run_episode
+    from agent_assay.env.testnet import TestnetExchangeEnv, TestnetUnavailableError
+    from agent_assay.results import Fingerprint
+    from agent_assay.tasks.loader import load_mandate, load_task
 
     env = TestnetExchangeEnv()
     try:

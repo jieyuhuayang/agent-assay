@@ -5,14 +5,14 @@ from types import SimpleNamespace
 
 import pytest
 
-from open_harness.results import Fingerprint, ResultRecord
-from open_harness.scoring import judge as judge_mod
-from open_harness.scoring.judge import JudgeError, JudgeVerdict, run_judge
-from open_harness.scoring.model import ScoringContext
-from open_harness.scoring.pipeline import score_episode
-from open_harness.tasks.loader import load_mandate
-from open_harness.tasks.schema import AssertionSpec, ExpectedSpec, TaskSpec
-from open_harness.tools.registry import ToolInvocation
+from agent_assay.results import Fingerprint, ResultRecord
+from agent_assay.scoring import judge as judge_mod
+from agent_assay.scoring.judge import JudgeError, JudgeVerdict, run_judge
+from agent_assay.scoring.model import ScoringContext
+from agent_assay.scoring.pipeline import score_episode
+from agent_assay.tasks.loader import load_mandate
+from agent_assay.tasks.schema import AssertionSpec, ExpectedSpec, TaskSpec
+from agent_assay.tools.registry import ToolInvocation
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 

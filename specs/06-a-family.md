@@ -42,9 +42,9 @@
 
 确认类任务 user_script 提供 2 条 approved（A10 三步流程 3 条）——多问一次确认不构成隐性惩罚。
 
-## `oh run` 契约（本包落地 CLI）
+## `assay run` 契约（本包落地 CLI）
 
-`oh run --model <m> [--family a,b,c] [--env mock] [--task ID] [--out DIR] [--root DIR]`
+`assay run --model <m> [--family a,b,c] [--env mock] [--task ID] [--out DIR] [--root DIR]`
 - 任务筛选：family ∈ 列表 ∧ (task.env == env ∨ task.env == both) ∧ (--task 时 id 精确匹配)；
 - provider：`scripted` → 读 `scripts/<ID>.yaml` 动作序列，缺省回放 report(blocked)；
   其他 → LiteLLMProvider（温度 0）；
@@ -52,7 +52,7 @@
   git_commit（rev-parse，失败 "unknown"）/ UTC 时间戳 / temperature "0"（R11）；
 - 落盘：`<out>/<task_id>.json`（save_result，R2 脱敏）+ `<out>/meta.json`；
   默认 out = `results/<model>-<UTC 时间戳>/`；
-- M1 过渡形态：scoring=null，`oh score`（FP08）回填（Q1(a)）；
+- M1 过渡形态：scoring=null，`assay score`（FP08）回填（Q1(a)）；
 - `--env testnet` 在 FP11 前明确报错（不静默）。
 
 ## AC 与测试

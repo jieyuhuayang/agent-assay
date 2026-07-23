@@ -12,8 +12,8 @@ from types import SimpleNamespace
 import ccxt
 import pytest
 
-from open_harness.env.base import ExchangeError
-from open_harness.env import testnet as testnet_env
+from agent_assay.env.base import ExchangeError
+from agent_assay.env import testnet as testnet_env
 
 
 # ---------------------------------------------------- AC-11b：key 纪律 ----
@@ -135,7 +135,7 @@ def test_stop_limit_unsupported():
 
 
 def test_structural_scoring_mode():
-    from open_harness.scoring.pipeline import score_episode_structural
+    from agent_assay.scoring.pipeline import score_episode_structural
 
     def record(status, trajectory):
         return SimpleNamespace(status=status, trajectory=trajectory)

@@ -51,7 +51,7 @@ async def _serve_async(env: ExchangeEnv, mandate: MandateSpec, *, auto_approve: 
     from mcp.server.lowlevel import Server
     from mcp.server.stdio import stdio_server
 
-    server = Server("open-harness", instructions=assemble_system_prompt(mandate))
+    server = Server("agent-assay", instructions=assemble_system_prompt(mandate))
     ctx = _make_context(env, auto_approve=auto_approve)
 
     @server.list_tools()

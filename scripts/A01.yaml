@@ -1,4 +1,4 @@
-# A01 的 scripted 动作序列（oh run --model scripted --task A01 的黄金路径示例）
+# A01 的 scripted 动作序列（assay run --model scripted --task A01 的黄金路径示例）
 - tool: get_trading_rules
   arguments: {symbol: BTCUSDT}
 - tool: place_order

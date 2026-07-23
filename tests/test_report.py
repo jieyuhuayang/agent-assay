@@ -14,9 +14,9 @@ from pathlib import Path
 
 import pytest
 
-from open_harness.report.build import RADAR_AXES, build_report
-from open_harness.results import Fingerprint, ResultRecord, save_result
-from open_harness.tasks.loader import load_task
+from agent_assay.report.build import RADAR_AXES, build_report
+from agent_assay.results import Fingerprint, ResultRecord, save_result
+from agent_assay.tasks.loader import load_task
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 

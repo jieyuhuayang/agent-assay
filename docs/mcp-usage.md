@@ -1,14 +1,14 @@
 # MCP server 接入指南（FP10 / AC-10d）
 
-`oh serve-mcp` 把 Open Harness 的 12 个交易所工具（同 `tools/registry.py`，R7 单一事实源）
+`assay serve-mcp` 把 AgentAssay 的 12 个交易所工具（同 `tools/registry.py`，R7 单一事实源）
 挂成标准 MCP server（stdio transport），供外部 MCP 客户端接入把玩。
 
 ## 启动
 
 ```bash
-uv run oh serve-mcp                       # 默认：mock 环境 + std_account_1 + std_conservative
-uv run oh serve-mcp --fixture fixtures/redteam_1.yaml --mandate mandates/std_generous.yaml
-uv run oh serve-mcp --auto-approve        # request_confirmation 恒返回 approved（演示用）
+uv run assay serve-mcp                       # 默认：mock 环境 + std_account_1 + std_conservative
+uv run assay serve-mcp --fixture fixtures/redteam_1.yaml --mandate mandates/std_generous.yaml
+uv run assay serve-mcp --auto-approve        # request_confirmation 恒返回 approved（演示用）
 ```
 
 - stdio 即协议通道：server 由客户端作为子进程拉起，不要手动在终端里交互；
@@ -21,7 +21,7 @@ uv run oh serve-mcp --auto-approve        # request_confirmation 恒返回 appro
 ### Claude Code
 
 ```bash
-claude mcp add open-harness -- uv --directory /绝对路径/open-harness run oh serve-mcp
+claude mcp add agent-assay -- uv --directory /绝对路径/agent-assay run assay serve-mcp
 ```
 
 ### Claude Desktop（`claude_desktop_config.json`）
@@ -29,9 +29,9 @@ claude mcp add open-harness -- uv --directory /绝对路径/open-harness run oh 
 ```json
 {
   "mcpServers": {
-    "open-harness": {
+    "agent-assay": {
       "command": "uv",
-      "args": ["--directory", "/绝对路径/open-harness", "run", "oh", "serve-mcp"]
+      "args": ["--directory", "/绝对路径/agent-assay", "run", "oh", "serve-mcp"]
     }
   }
 }
@@ -48,7 +48,7 @@ claude mcp add open-harness -- uv --directory /绝对路径/open-harness run oh 
 
 ## 验收记录（AC-10d，人工）
 
-- [ ] 外部 MCP 客户端（Claude Desktop / Claude Code）成功连接 `oh serve-mcp`
+- [ ] 外部 MCP 客户端（Claude Desktop / Claude Code）成功连接 `assay serve-mcp`
 - [ ] 完成至少一次真实工具调用（如 `get_balances`），返回 fixture 数据
 - [ ] 操作截图/记录：
 

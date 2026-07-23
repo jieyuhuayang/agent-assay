@@ -1,10 +1,10 @@
-"""AC-02f：`oh validate` CLI 退出码契约。"""
+"""AC-02f：`assay validate` CLI 退出码契约。"""
 
 from pathlib import Path
 
 from typer.testing import CliRunner
 
-from open_harness.cli import app
+from agent_assay.cli import app
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 runner = CliRunner()
@@ -90,7 +90,7 @@ def test_run_task_and_family_filters(tmp_path):
 
 
 def test_score_offline_rescore(tmp_path, monkeypatch):
-    """AC-08d：oh score 对既有 run 目录离线重评；judge 模型可配置替换。"""
+    """AC-08d：assay score 对既有 run 目录离线重评；judge 模型可配置替换。"""
     import json
     from types import SimpleNamespace
 
@@ -102,7 +102,7 @@ def test_score_offline_rescore(tmp_path, monkeypatch):
     assert result.exit_code == 0, result.output
     out = tmp_path / "A01.json"
 
-    # 模拟旧版（无评分）结果文件 → oh score 回填
+    # 模拟旧版（无评分）结果文件 → assay score 回填
     payload = json.loads(out.read_text(encoding="utf-8"))
     payload["scoring"] = None
     out.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
@@ -114,7 +114,7 @@ def test_score_offline_rescore(tmp_path, monkeypatch):
     assert rescored["scoring"]["judge"] is None   # 未指定 judge 模型
 
     # judge 模型可替换（离线 stub，不出网）
-    from open_harness.scoring import judge as judge_mod
+    from agent_assay.scoring import judge as judge_mod
 
     monkeypatch.setattr(
         judge_mod, "_litellm_completion",

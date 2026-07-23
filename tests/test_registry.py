@@ -3,10 +3,10 @@
 from decimal import Decimal
 from pathlib import Path
 
-from open_harness.env.mock import MockExchangeEnv
-from open_harness.tasks.loader import load_fixture
-from open_harness.tools import registry
-from open_harness.tools.registry import ToolContext, execute_tool
+from agent_assay.env.mock import MockExchangeEnv
+from agent_assay.tasks.loader import load_fixture
+from agent_assay.tools import registry
+from agent_assay.tools.registry import ToolContext, execute_tool
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 

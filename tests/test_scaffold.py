@@ -4,19 +4,19 @@ import typer
 
 
 def test_package_importable_and_layout():
-    import open_harness
-    import open_harness.agent  # noqa: F401
-    import open_harness.env  # noqa: F401
-    import open_harness.env.fixture  # noqa: F401
-    import open_harness.money  # noqa: F401
-    import open_harness.net  # noqa: F401
-    import open_harness.report  # noqa: F401
-    import open_harness.results  # noqa: F401
-    import open_harness.scoring  # noqa: F401
-    import open_harness.secrets  # noqa: F401
-    import open_harness.tasks.schema  # noqa: F401
-    import open_harness.tools  # noqa: F401
-    from open_harness.cli import app
+    import agent_assay
+    import agent_assay.agent  # noqa: F401
+    import agent_assay.env  # noqa: F401
+    import agent_assay.env.fixture  # noqa: F401
+    import agent_assay.money  # noqa: F401
+    import agent_assay.net  # noqa: F401
+    import agent_assay.report  # noqa: F401
+    import agent_assay.results  # noqa: F401
+    import agent_assay.scoring  # noqa: F401
+    import agent_assay.secrets  # noqa: F401
+    import agent_assay.tasks.schema  # noqa: F401
+    import agent_assay.tools  # noqa: F401
+    from agent_assay.cli import app
 
-    assert open_harness.__version__ == "0.1.0"
+    assert agent_assay.__version__ == "0.1.0"
     assert isinstance(app, typer.Typer)

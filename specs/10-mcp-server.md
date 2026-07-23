@@ -12,8 +12,8 @@
 
 交付物：
 
-- `src/open_harness/mcp_server.py` — 反射层 + stdio server；
-- `oh serve-mcp` 子命令（typer）；
+- `src/agent_assay/mcp_server.py` — 反射层 + stdio server；
+- `assay serve-mcp` 子命令（typer）；
 - `docs/mcp-usage.md` — 外部客户端接入说明（AC-10d 人工项的操作底稿）；
 - 守护测试 `test_r7_mcp_schemas_match_registry` + `tests/test_mcp_server.py`。
 
@@ -64,14 +64,14 @@ serve(env, mandate, *, auto_approve=False) -> None  # 阻塞运行 stdio server�
   "error_message": str|null}`（即 `ToolInvocation` 去掉 tool/arguments/irreversible——
   前两者客户端自知，后者是评分侧元数据不外泄语义）。
   `InvariantViolation` 例外：环境账本损坏必须炸出（与 registry 同款护栏）。
-- server 元数据：name=`open-harness`，instructions=渲染后的 mandate prompt。
+- server 元数据：name=`agent-assay`，instructions=渲染后的 mandate prompt。
 - `report` 工具在 MCP 模式无 episode 语义，行为不变（返回 `{"status":..., "recorded": true}`），
   文档里注明它在 MCP 模式只是回声。
 
-## 4. `oh serve-mcp` CLI
+## 4. `assay serve-mcp` CLI
 
 ```
-oh serve-mcp [--env mock] [--fixture fixtures/std_account_1.yaml]
+assay serve-mcp [--env mock] [--fixture fixtures/std_account_1.yaml]
              [--mandate mandates/std_conservative.yaml] [--root .] [--auto-approve]
 ```
 
@@ -80,14 +80,14 @@ oh serve-mcp [--env mock] [--fixture fixtures/std_account_1.yaml]
 - fixture / mandate 相对 `--root` 解析；文件不存在 → 明确报错 exit 2（stderr），不得静默；
 - stdio 是 MCP 传输通道：**协议流量走 stdout，人类可读日志一律走 stderr**；
 - 进程常驻直至 stdin EOF（客户端断开）。
-- `python -m open_harness.cli` 需可直接执行（测试用 stdio 客户端以此拉起子进程）。
+- `python -m agent_assay.cli` 需可直接执行（测试用 stdio 客户端以此拉起子进程）。
 
 ## 5. 测试映射
 
 | AC | 测试 | 要点 |
 |----|------|------|
 | AC-10a | `test_redlines.py::test_r7_mcp_schemas_match_registry` | `build_mcp_tools()` 与 `all_tools()` 数量、顺序、name/description/inputSchema 逐字段相等（schema 用 `==` 深比较） |
-| AC-10b | `test_mcp_server.py::test_stdio_tool_call_roundtrip` | mcp SDK stdio 客户端拉起 `python -m open_harness.cli serve-mcp` 子进程：initialize → list_tools（12 个）→ call_tool `get_balances` → 结果含 fixture 余额 |
+| AC-10b | `test_mcp_server.py::test_stdio_tool_call_roundtrip` | mcp SDK stdio 客户端拉起 `python -m agent_assay.cli serve-mcp` 子进程：initialize → list_tools（12 个）→ call_tool `get_balances` → 结果含 fixture 余额 |
 | AC-10c | `test_mcp_server.py::test_serve_mcp_flags` | 换 `--fixture fixtures/redteam_1.yaml` + `--mandate mandates/std_generous.yaml`：余额来自 redteam_1；initialize.instructions 含 generous 限额「10000」 |
 | 补充 | `test_mcp_server.py::test_mcp_interactive_tools_policy` | 默认 `request_confirmation` → denied、`ask_user` → mcp-mode 提示；`--auto-approve` → approved |
 | 补充 | `test_mcp_server.py::test_mcp_tool_error_is_structured` | 非法参数 call_tool → `ok=false, error_kind=schema_error`，进程不死、可继续调用 |

@@ -44,7 +44,7 @@ semantic_error。**mandate 维度（限额/白名单/确认）不存在任何检
 每次可写操作后强制校验，违反 raise `InvariantViolation`：
 1. 每资产 `locked == Σ 挂单冻结`（buy: 剩余量×限价 计入 quote；sell: 剩余量 计入 base）；
 2. 所有 free/locked ≥ 0。
-fixture 加载即校验（自洽性），`oh validate` 对 fixtures 追加 `fixture-invariant` 检查项。
+fixture 加载即校验（自洽性），`assay validate` 对 fixtures 追加 `fixture-invariant` 检查项。
 
 ### fixture schema 扩展（env/fixture.py）
 

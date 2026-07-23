@@ -5,10 +5,10 @@ from pathlib import Path
 
 import pytest
 
-from open_harness.env.base import ExchangeError, InvariantViolation
-from open_harness.env.fixture import PartialFillRule
-from open_harness.env.mock import MockExchangeEnv
-from open_harness.tasks.loader import load_fixture
+from agent_assay.env.base import ExchangeError, InvariantViolation
+from agent_assay.env.fixture import PartialFillRule
+from agent_assay.env.mock import MockExchangeEnv
+from agent_assay.tasks.loader import load_fixture
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 STD = REPO_ROOT / "fixtures" / "std_account_1.yaml"

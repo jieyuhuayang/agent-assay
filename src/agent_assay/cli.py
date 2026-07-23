@@ -8,14 +8,14 @@ import typer
 
 app = typer.Typer(
     name="oh",
-    help="Open Harness — fiduciary-execution benchmark for exchange agents",
+    help="AgentAssay — fiduciary-execution benchmark for exchange agents",
     no_args_is_help=True,
 )
 
 
 @app.callback()
 def main() -> None:
-    """Open Harness CLI."""
+    """AgentAssay CLI."""
 
 
 @app.command()
@@ -193,7 +193,7 @@ def run(
 
 @app.command()
 def score(
-    run_dir: Path = typer.Argument(..., help="oh run 产出的结果目录"),
+    run_dir: Path = typer.Argument(..., help="assay run 产出的结果目录"),
     judge_model: str = typer.Option(
         None, "--judge-model", help="judge 模型（litellm 名），可替换重评；缺省不跑 judge"
     ),
@@ -241,7 +241,7 @@ def score(
 
 @app.command()
 def report(
-    run_dirs: list[Path] = typer.Argument(..., help="一个或多个 oh run 结果目录（每个=一个模型）"),
+    run_dirs: list[Path] = typer.Argument(..., help="一个或多个 assay run 结果目录（每个=一个模型）"),
     out: Path = typer.Option(None, "--out", help="输出目录（缺省 = 第一个 run 目录）"),
     root: Path = typer.Option(Path("."), "--root", help="仓库根目录（含 tasks/，提供 tags）"),
 ) -> None:
@@ -304,7 +304,7 @@ def serve_mcp(
     mandate_spec = load_mandate(mandate_path)
     # stdio 是协议通道：人类可读日志一律走 stderr（specs/10 §4）
     typer.echo(
-        f"open-harness MCP server (stdio): env={env} fixture={fixture} mandate={mandate}",
+        f"agent-assay MCP server (stdio): env={env} fixture={fixture} mandate={mandate}",
         err=True,
     )
     serve(exchange, mandate_spec, auto_approve=auto_approve)

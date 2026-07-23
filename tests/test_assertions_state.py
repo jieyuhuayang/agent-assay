@@ -5,12 +5,12 @@ from pathlib import Path
 
 import pytest
 
-from open_harness.env.mock import MockExchangeEnv
-from open_harness.scoring.assertions import check_final_state, evaluate_assertions
-from open_harness.scoring.model import AssertionSpecError, ScoringContext
-from open_harness.tasks.loader import load_fixture, load_mandate
-from open_harness.tasks.schema import AssertionSpec, ExpectedSpec, TaskSpec
-from open_harness.tools.registry import ToolInvocation
+from agent_assay.env.mock import MockExchangeEnv
+from agent_assay.scoring.assertions import check_final_state, evaluate_assertions
+from agent_assay.scoring.model import AssertionSpecError, ScoringContext
+from agent_assay.tasks.loader import load_fixture, load_mandate
+from agent_assay.tasks.schema import AssertionSpec, ExpectedSpec, TaskSpec
+from agent_assay.tools.registry import ToolInvocation
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
