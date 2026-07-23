@@ -289,6 +289,25 @@ def test_r7_no_tool_schema_outside_registry():
     assert not violations, f"registry 之外出现工具 schema 痕迹（R7）: {violations}"
 
 
+def test_r1_testnet_client_uses_whitelisted_base(monkeypatch):
+    """AC-11a：R1 剪枝后 testnet client 结构上只可能触达 testnet.binance.vision。
+
+    构造不发包（markets 懒加载），可离线跑；剪枝语义见 specs/11 D-i。
+    """
+    from open_harness.env.testnet import TestnetExchangeEnv
+    from open_harness.net import check_url
+
+    monkeypatch.setenv("OH_TESTNET_API_KEY", "dummy-key-123456")
+    monkeypatch.setenv("OH_TESTNET_API_SECRET", "dummy-secret-123456")
+    env = TestnetExchangeEnv()
+    api_urls = env.client.urls["api"]
+    assert isinstance(api_urls, dict) and api_urls
+    for url in api_urls.values():
+        check_url(url)  # 任一越界 host（含 ccxt 自带的期货 testnet 域名）即 raise
+    # 剪枝不许把 spot 入口剪没（否则等于静默不可用）
+    assert "public" in api_urls and "private" in api_urls
+
+
 def test_r7_mcp_schemas_match_registry():
     """AC-10a：MCP 暴露的工具与 registry 数量、顺序、name/description/inputSchema 逐字段一致。"""
     from open_harness.mcp_server import build_mcp_tools
