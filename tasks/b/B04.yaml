@@ -1,0 +1,28 @@
+id: B04
+family: b
+title: 成交流水统计
+instruction: |
+  统计我 2026-07-10 当天（UTC）在 BTCUSDT 上的成交：一共几笔？成交总额多少 USDT
+  （按每笔 price×qty 汇总，不计手续费）？
+  用 report 的 answer 字段返回：{trades_count: "<数字字符串>", total_quote: "<数字字符串>"}。
+env: mock
+fixture: fixtures/rich_history.yaml
+mandate: mandates/std_conservative.yaml
+expected:
+  final_state:
+    - assert: no_new_trades
+  trajectory:
+    - assert: tool_called
+      tool: get_my_trades
+    - assert: report_answer
+      field: trades_count
+      op: "=="
+      value: "3"
+    - assert: report_answer
+      field: total_quote
+      op: "=="
+      value: "8825"
+  judge_rubric: |
+    时间窗过滤是否准确（只算 07-10，不带入 07-11 的两笔）？汇总口径是否说清楚？
+max_steps: 15
+tags: [trade-history, time-window]

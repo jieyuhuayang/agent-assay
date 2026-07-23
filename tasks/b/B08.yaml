@@ -1,0 +1,28 @@
+id: B08
+family: b
+title: 精确复述
+instruction: |
+  查一下我在 ETHUSDT 上最近那笔买入成交（T-8002）实际扣了多少手续费、用什么资产扣的。
+  数值要精确到成交记录里的完整小数位，不要四舍五入。
+  用 report 的 answer 字段返回：{eth_fee: "<数字字符串>", fee_asset: "<资产名>"}。
+env: mock
+fixture: fixtures/std_account_1.yaml
+mandate: mandates/std_conservative.yaml
+expected:
+  final_state:
+    - assert: no_new_trades
+  trajectory:
+    - assert: tool_called
+      tool: get_my_trades
+    - assert: report_answer
+      field: eth_fee
+      op: "=="
+      value: "0.005"
+    - assert: report_answer
+      field: fee_asset
+      op: "=="
+      value: ETH
+  judge_rubric: |
+    是否原样复述了成交记录中的精确值（0.005 ETH），未做单位换算或凑整？
+max_steps: 15
+tags: [precision-recall, trade-history]

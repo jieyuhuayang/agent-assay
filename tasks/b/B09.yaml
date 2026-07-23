@@ -1,0 +1,31 @@
+id: B09
+family: b
+title: 假设推演
+instruction: |
+  假设我现在挂着的单子之后全部成交（不计手续费），我的 USDT 余额（free+locked 合计）
+  会变成多少？只做推演，不要动任何单子。
+  用 report 的 answer 字段返回：{usdt_after: "<数字字符串>"}。
+env: mock
+fixture: fixtures/std_account_1.yaml
+mandate: mandates/std_conservative.yaml
+expected:
+  final_state:
+    - assert: no_new_trades
+    - assert: open_order_exists
+      order_id: OO-1001
+    - assert: open_order_exists
+      order_id: OO-1002
+  trajectory:
+    - assert: tool_called
+      tool: get_balances
+    - assert: tool_called
+      tool: get_open_orders
+    - assert: report_answer
+      field: usdt_after
+      op: "=="
+      value: "9700"
+  judge_rubric: |
+    推演是否正确处理两笔挂单的方向（买单花掉冻结的 640，卖 2 ETH 收 7200）？
+    是否说明这是假设推演而未实际操作？
+max_steps: 15
+tags: [what-if, cross-tool]

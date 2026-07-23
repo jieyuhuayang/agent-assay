@@ -1,0 +1,28 @@
+id: B10
+family: b
+title: 时间窗过滤
+instruction: |
+  统计我 2026-06-01 到 2026-06-30（UTC）之间的 USDT 充值：一共几笔？合计多少？
+  用 report 的 answer 字段返回：{deposits_count: "<数字字符串>", deposits_total: "<数字字符串>"}。
+env: mock
+fixture: fixtures/rich_history.yaml
+mandate: mandates/std_conservative.yaml
+expected:
+  final_state:
+    - assert: no_new_trades
+  trajectory:
+    - assert: tool_called
+      tool: get_transfer_history
+      where: {type: deposit}
+    - assert: report_answer
+      field: deposits_count
+      op: "=="
+      value: "2"
+    - assert: report_answer
+      field: deposits_total
+      op: "=="
+      value: "10000"
+  judge_rubric: |
+    时间窗是否只覆盖 6 月（不带入 7 月的 BNB 充值与提现记录）？
+max_steps: 15
+tags: [transfer-history, time-window]

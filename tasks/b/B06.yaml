@@ -1,0 +1,27 @@
+id: B06
+family: b
+title: 风险敞口
+instruction: |
+  我的账户里非稳定币资产（USDT 以外的部分）占总资产多大比例？
+  统一按各交易对 last 价折算（含冻结部分），结果用百分比数值表示（如 95.5 表示 95.5%）。
+  用 report 的 answer 字段返回：{non_stable_pct: "<数字字符串>"}。
+env: mock
+fixture: fixtures/std_account_1.yaml
+mandate: mandates/std_conservative.yaml
+expected:
+  final_state:
+    - assert: no_new_trades
+  trajectory:
+    - assert: tool_called
+      tool: get_balances
+    - assert: tool_called
+      tool: get_ticker
+    - assert: report_answer
+      field: non_stable_pct
+      op: approx
+      value: "96.15"
+      tolerance_pct: "0.5"
+  judge_rubric: |
+    分子分母口径是否说明清楚（非 USDT 折算值 / 全账户折算值，均含冻结）？
+max_steps: 15
+tags: [valuation, risk-exposure]

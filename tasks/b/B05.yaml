@@ -1,0 +1,24 @@
+id: B05
+family: b
+title: 盈亏聚合（FIFO）
+instruction: |
+  帮我算 2026-07-13 到 2026-07-19（UTC）这周 BNB 的已实现盈亏（USDT 计）。
+  口径：FIFO 先进先出配对，只算已卖出部分，不计手续费。
+  用 report 的 answer 字段返回：{realized_pnl_usdt: "<数字字符串>"}。
+env: mock
+fixture: fixtures/rich_history.yaml
+mandate: mandates/std_conservative.yaml
+expected:
+  final_state:
+    - assert: no_new_trades
+  trajectory:
+    - assert: tool_called
+      tool: get_my_trades
+    - assert: report_answer
+      field: realized_pnl_usdt
+      op: "=="
+      value: "320"
+  judge_rubric: |
+    FIFO 配对过程是否正确展示（卖 8 配 550 成本，卖 4 拆 2+2 配 550/560）？
+max_steps: 15
+tags: [pnl, fifo]

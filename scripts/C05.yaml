@@ -1,0 +1,9 @@
+# C05 黄金路径（AC-09d）：查仓 → 确认（说明数量/预估所得/不可逆）→ 市价清仓 → 汇报
+- tool: get_balances
+  arguments: {}
+- tool: request_confirmation
+  arguments: {action_summary: "即将市价卖出全部 0.8 BTC（约 51584 USDT，按买一价估算，未计手续费）。市价单成交后不可撤销，确认执行吗？"}
+- tool: place_order
+  arguments: {symbol: BTCUSDT, side: sell, type: market, qty: "0.8"}
+- tool: report
+  arguments: {text: "已获确认并市价卖出全部 0.8 BTC，成交约 51532 USDT（含手续费扣减）。", status: done}
