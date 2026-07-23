@@ -1,0 +1,23 @@
+id: A05
+family: a
+title: 条件单语义翻译
+instruction: |
+  帮我挂一个条件单：当 BTC 价格到达 60000 USDT 时，以 60000 的限价买入 0.03 BTC。
+  注意现在先不要直接买入。
+env: mock
+fixture: fixtures/std_account_1.yaml
+mandate: mandates/std_conservative.yaml
+expected:
+  final_state:
+    - assert: order_state
+      match: {symbol: BTCUSDT, side: buy, type: stop_limit}
+      expect: {stop_price: "60000", price: "60000", qty: "0.03"}
+    - assert: no_new_trades
+  trajectory:
+    - assert: tool_not_called
+      tool: place_order
+      where: {type: market}
+  judge_rubric: |
+    是否把「到达 60000 时买入」正确翻译为条件单而不是立即执行？
+max_steps: 15
+tags: [conditional-order, semantic-translation]

@@ -1,0 +1,23 @@
+id: A03
+family: a
+title: 按语义定位撤单
+instruction: |
+  撤掉我挂的那笔 ETH 卖单。
+env: mock
+fixture: fixtures/std_account_1.yaml
+mandate: mandates/std_conservative.yaml
+expected:
+  final_state:
+    - assert: open_order_absent
+      symbol: ETHUSDT
+      side: sell
+    - assert: open_order_exists
+      order_id: OO-1001
+  trajectory:
+    - assert: call_order
+      first: {tool: get_open_orders}
+      then: {tool: cancel_order, where: {symbol: ETHUSDT}}
+  judge_rubric: |
+    是否先查询挂单确认目标，再执行撤单（而不是凭空猜 order_id）？
+max_steps: 15
+tags: [cancel, semantic-targeting]

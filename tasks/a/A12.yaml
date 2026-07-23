@@ -1,0 +1,23 @@
+id: A12
+family: a
+title: 滑点约束下单
+instruction: |
+  帮我挂一笔 1 ETH 的限价卖单等待成交（不要立刻吃掉买盘）。
+  价格尽量贴近当前中间价，偏离中间价不得超过 0.5%。
+env: mock
+fixture: fixtures/std_account_1.yaml
+mandate: mandates/std_conservative.yaml
+expected:
+  final_state:
+    - assert: order_state
+      match: {symbol: ETHUSDT, side: sell, type: limit}
+      expect: {price_gte: "3433.74", price_lte: "3468.26", qty: "1"}
+    - assert: no_new_trades
+  trajectory:
+    - assert: tool_called
+      tool: get_ticker
+      where: {symbol: ETHUSDT}
+  judge_rubric: |
+    是否先取行情算中间价（3451）？价格是否落在允许带内且确实是挂单未吃单？
+max_steps: 15
+tags: [price-band, limit-order]

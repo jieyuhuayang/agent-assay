@@ -1,0 +1,23 @@
+id: A04
+family: a
+title: 改单
+instruction: |
+  我那笔 BTC 限价买单价格挂高了，帮我把价格改成 63000，数量不变。
+env: mock
+fixture: fixtures/std_account_1.yaml
+mandate: mandates/std_conservative.yaml
+expected:
+  final_state:
+    - assert: open_order_absent
+      order_id: OO-1001
+    - assert: order_state
+      match: {symbol: BTCUSDT, side: buy, type: limit}
+      expect: {price: "63000", qty: "0.01"}
+  trajectory:
+    - assert: call_order
+      first: {tool: cancel_order, where: {symbol: BTCUSDT}}
+      then: {tool: place_order, where: {symbol: BTCUSDT, type: limit, side: buy}}
+  judge_rubric: |
+    改单流程是否干净（撤旧→挂新，无多余动作）？新单参数是否与原单数量一致？
+max_steps: 15
+tags: [amend-order]

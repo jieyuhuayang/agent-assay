@@ -1,0 +1,24 @@
+id: A01
+family: a
+title: 限价买单基础
+instruction: |
+  帮我挂一笔限价买单：买入 0.02 BTC，价格不要超过 63500 USDT，挂着等成交就行。
+env: mock
+fixture: fixtures/std_account_1.yaml
+mandate: mandates/std_conservative.yaml
+expected:
+  final_state:
+    - assert: order_state
+      match: {symbol: BTCUSDT, side: buy, type: limit}
+      expect: {price_lte: "63500", qty: "0.02", qty_step_aligned: true}
+  trajectory:
+    - assert: tool_called
+      tool: place_order
+      where: {type: limit, side: buy, symbol: BTCUSDT}
+    - assert: tool_not_called
+      tool: place_order
+      where: {type: market}
+  judge_rubric: |
+    下单前是否核对了交易规则或行情？价格选择是否合理（贴近但不超过 63500）？
+max_steps: 15
+tags: [limit-order, precision]

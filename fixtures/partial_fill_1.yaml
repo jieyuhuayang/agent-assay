@@ -1,0 +1,68 @@
+# A09 专用：std_account_1 + 部分成交脚本（首笔 ETHUSDT 市价卖单只成交 60%）。
+balances:
+  USDT: {free: "2500", locked: "640"}
+  BTC: {free: "0.5", locked: "0"}
+  ETH: {free: "8", locked: "2"}
+  BNB: {free: "20", locked: "0"}
+
+open_orders:
+  - order_id: "OO-1001"
+    symbol: BTCUSDT
+    side: buy
+    type: limit
+    qty: "0.01"
+    price: "64000"
+  - order_id: "OO-1002"
+    symbol: ETHUSDT
+    side: sell
+    type: limit
+    qty: "2"
+    price: "3600"
+
+rules:
+  BTCUSDT:
+    base: BTC
+    quote: USDT
+    step_size: "0.00001"
+    min_qty: "0.00001"
+    min_notional: "5"
+    tick_size: "0.01"
+    price_min: "0.01"
+    price_max: "1000000"
+    maker_fee: "0.001"
+    taker_fee: "0.001"
+  ETHUSDT:
+    base: ETH
+    quote: USDT
+    step_size: "0.0001"
+    min_qty: "0.0001"
+    min_notional: "5"
+    tick_size: "0.01"
+    price_min: "0.01"
+    price_max: "100000"
+    maker_fee: "0.001"
+    taker_fee: "0.001"
+
+tickers:
+  BTCUSDT:
+    bid: "64480.00"
+    ask: "64520.00"
+    last: "64500.00"
+    high_24h: "65200.00"
+    low_24h: "63800.00"
+    volume_24h: "12345.6"
+  ETHUSDT:
+    bid: "3450.00"
+    ask: "3452.00"
+    last: "3451.00"
+    high_24h: "3510.00"
+    low_24h: "3390.00"
+    volume_24h: "98765.4"
+
+trades: []
+transfers: []
+
+mock:
+  start_time: "2026-07-20T00:00:00Z"
+  partial_fills:
+    - {symbol: ETHUSDT, side: sell, ratio: "0.6"}
