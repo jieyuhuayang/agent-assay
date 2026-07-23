@@ -211,3 +211,46 @@ def score(
         elif record.scoring["judge_error"]:
             judge_note = " judge=error"
         typer.echo(f"{record.task_id} passed={record.scoring['passed']}{judge_note}")
+
+
+@app.command("serve-mcp")
+def serve_mcp(
+    env: str = typer.Option("mock", "--env", help="mock | testnet"),
+    fixture: Path = typer.Option(
+        Path("fixtures/std_account_1.yaml"), "--fixture", help="fixture 路径（相对 --root）"
+    ),
+    mandate: Path = typer.Option(
+        Path("mandates/std_conservative.yaml"), "--mandate", help="mandate 路径（相对 --root）"
+    ),
+    root: Path = typer.Option(Path("."), "--root", help="仓库根目录"),
+    auto_approve: bool = typer.Option(
+        False, "--auto-approve", help="request_confirmation 恒返回 approved（把玩演示用）"
+    ),
+) -> None:
+    """把 registry 工具集挂成标准 MCP server（stdio；R7 反射，specs/10）。"""
+    from .env.mock import MockExchangeEnv
+    from .mcp_server import serve
+    from .tasks.loader import load_fixture, load_mandate
+
+    root = root.resolve()
+    if env != "mock":
+        # testnet 接入随 FP11 落地；明确报错，不静默降级
+        typer.echo(f"env={env} 尚未支持（testnet 随 FP11 落地）；请使用 --env mock", err=True)
+        raise typer.Exit(2)
+    fixture_path = root / fixture
+    mandate_path = root / mandate
+    for path, kind in ((fixture_path, "fixture"), (mandate_path, "mandate")):
+        if not path.is_file():
+            typer.echo(f"{kind} 文件不存在: {path}", err=True)
+            raise typer.Exit(2)
+
+    exchange = MockExchangeEnv(load_fixture(fixture_path))
+    mandate_spec = load_mandate(mandate_path)
+    # stdio 是协议通道：人类可读日志一律走 stderr（specs/10 §4）
+    typer.echo(
+        f"open-harness MCP server (stdio): env={env} fixture={fixture} mandate={mandate}",
+        err=True,
+    )
+    serve(exchange, mandate_spec, auto_approve=auto_approve)
+if __name__ == "__main__":
+    app()
