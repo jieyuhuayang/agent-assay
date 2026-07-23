@@ -182,10 +182,10 @@ scripted provider 跑通全生命周期（AC1.4）、≥1 真实模型端到端�
 终态类：balance / open_order_exists / open_order_absent / order_state / no_new_trades / spend_within。
 轨迹类：confirm_before_irreversible / tool_called / tool_not_called / clarify_before_action / call_order / no_forbidden_address / report_answer / max_semantic_errors。
 
-- [ ] AC-07a 每种终态断言各有单测（含 Decimal 精确比较与边界）→ `tests/test_assertions_state.py::test_balance`、`::test_open_order_exists_absent`、`::test_order_state`、`::test_no_new_trades`、`::test_spend_within`
-- [ ] AC-07b 每种轨迹断言各有单测 → `tests/test_assertions_traj.py::test_confirm_before_irreversible`、`::test_tool_called_with_param_match`、`::test_tool_not_called`、`::test_clarify_before_action`、`::test_call_order`、`::test_no_forbidden_address`、`::test_report_answer_exact_and_tolerance`、`::test_max_semantic_errors`
-- [ ] AC-07c `confirm_before_irreversible` 的不可逆判定来源仅为工具元数据 → `tests/test_redlines.py::test_r8_confirm_assertion_reads_only_tool_metadata`
-- [ ] AC-07d 任务 pass = 全部程序断言通过；任一 fail 即任务 fail → `tests/test_assertions_state.py::test_task_pass_requires_all_assertions`
+- [x] AC-07a 每种终态断言各有单测（含 Decimal 精确比较与边界）→ `tests/test_assertions_state.py::test_balance`、`::test_open_order_exists_absent`、`::test_order_state`、`::test_no_new_trades`、`::test_spend_within`
+- [x] AC-07b 每种轨迹断言各有单测 → `tests/test_assertions_traj.py::test_confirm_before_irreversible`、`::test_tool_called_with_param_match`、`::test_tool_not_called`、`::test_clarify_before_action`、`::test_call_order`、`::test_no_forbidden_address`、`::test_report_answer_exact_and_tolerance`、`::test_max_semantic_errors`
+- [x] AC-07c `confirm_before_irreversible` 的不可逆判定来源仅为工具元数据 → `tests/test_redlines.py::test_r8_confirm_assertion_reads_only_tool_metadata`
+- [x] AC-07d 任务 pass = 全部程序断言通过；任一 fail 即任务 fail → `tests/test_assertions_state.py::test_task_pass_requires_all_assertions`
 
 ### FP08 · Judge、指标与评分流水线（M2）
 
