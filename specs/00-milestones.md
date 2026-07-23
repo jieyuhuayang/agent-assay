@@ -267,11 +267,11 @@ AC-11e 需 FP06（runner + `oh run` + A 族语料）与 FP09（B 族语料）入
 对 FP10/FP11 的依赖是内容与发布层面（README 须含 MCP 用法与 Testnet 模式章节、
 pytest 全绿覆盖 FP10/11 测试、AC3.6 全项通过后转 public），非 `report/` 代码层面。
 
-- [ ] AC-12a leaderboard 数字与结果 JSON 逐项对账一致 → `tests/test_report.py::test_leaderboard_reconciles_with_results`
-- [ ] AC-12b 六维雷达图按 9.3 定义生成 SVG（每模型一张 + 叠加一张）→ `tests/test_report.py::test_radar_six_axes_svg`
-- [ ] AC-12c 报告文件含 R12 免责声明 → `tests/test_redlines.py::test_r12_report_and_readme_contain_disclaimer`
-- [ ] AC-12d【人工】≥3 模型 × 36 任务跑分完成，样例报告入 `docs/sample-report/`（AC3.1）
-- [ ] AC-12e【人工】双语 README 按第 15 节结构齐备，关键发现 3 条提炼（AC3.5）
+- [x] AC-12a leaderboard 数字与结果 JSON 逐项对账一致 → `tests/test_report.py::test_leaderboard_reconciles_with_results`
+- [x] AC-12b 六维雷达图按 9.3 定义生成 SVG（每模型一张 + 叠加一张）→ `tests/test_report.py::test_radar_six_axes_svg`
+- [x] AC-12c 报告文件含 R12 免责声明 → `tests/test_redlines.py::test_r12_report_and_readme_contain_disclaimer`
+- [ ] AC-12d【人工】≥3 模型 × 36 任务跑分完成，样例报告入 `docs/sample-report/`（AC3.1）——**被 Q2 阻塞**：待 Owner 定 3 个跑分模型 + judge 模型并提供 API key
+- [ ] AC-12e【人工】双语 README 按第 15 节结构齐备，关键发现 3 条提炼（AC3.5）——双语初稿已入库（README.md / README.zh-CN.md），榜单图与关键发现待 AC-12d 跑分后填充，Owner 终审
 - [ ] AC-12f【人工】发布检查清单全项通过（LICENSE / secret 扫描 / pytest 全绿 / Quickstart 15 分钟 / R6 人工评审 / 图片渲染 / 免责声明），仓库转 public（AC3.6）
 
 ---
@@ -399,7 +399,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 - [x] FP09 · B/C 族任务集（2026-07-23，112 tests green；AC-09c Owner 签核 2026-07-24）—— **M2 完成线**
 - [x] FP10 · MCP server（2026-07-24，117 tests green；AC-10d 人工项待 Owner 外部客户端实操）
 - [x] FP11 · Testnet 集成（2026-07-24，144 tests green；AC-11e 冒烟待 Owner testnet key 实跑）
-- [ ] FP12 · 报告与发布 —— **M3 完成线 / v0.1 发布**
+- [ ] FP12 · 报告与发布 —— **M3 完成线 / v0.1 发布**（2026-07-24 代码侧完成：AC-12a–c，148 tests green，`oh report` 端到端可用；剩 AC-12d 三模型跑分【Q2 阻塞】、AC-12e README 终审、AC-12f 发布清单）
 
 勾选纪律（R10）：特性包的全部 AC 测试绿 + Owner 对「人工」项签字后，方可打勾；
 勾选 commit 与特性包最后一个实现 commit 分开，便于审计。
