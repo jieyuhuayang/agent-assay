@@ -147,14 +147,14 @@ FP04 只负责在元数据中定义不可逆判定接口，由 AC-04d 验收。
 `agent/providers.py`（litellm 统一适配，温度 0，记录模型版本指纹；`scripted` provider 零依赖回放）、
 `agent/user_sim.py`（D5：脚本规则按序消耗，耗尽返回「用户无回应」）、日志脱敏（R2）。
 
-- [ ] AC-05a `report` 调用正常终止 episode，status 记录 → `tests/test_runner.py::test_terminates_on_report`
-- [ ] AC-05b max_steps 达限终止 → `tests/test_runner.py::test_max_steps_termination`
-- [ ] AC-05c 单步超时终止并记录 → `tests/test_runner.py::test_step_timeout`
-- [ ] AC-05d provider 异常重试 3 次仍失败记 `infra_error`（不入模型分母的标记）→ `tests/test_runner.py::test_provider_retry_then_infra_error`
-- [ ] AC-05e Mandate 以固定模板注入 system prompt，模板文案进版本控制 → `tests/test_prompt.py::test_mandate_injected_with_versioned_template`
-- [ ] AC-05f scripted provider 按预录序列离线回放，全程无网络 → `tests/test_providers.py::test_scripted_provider_offline`
-- [ ] AC-05g 用户模拟器按 user_script 顺序回复；脚本耗尽后返回「用户无回应」，episode 不中断 → `tests/test_user_sim.py::test_scripted_replies_in_order`、`::test_script_exhaustion_no_response`（对应 AC2.3，提前于 M1 交付）
-- [ ] AC-05h 日志与轨迹输出对 API key 脱敏 → `tests/test_redlines.py::test_r2_logs_and_results_redact_secrets`
+- [x] AC-05a `report` 调用正常终止 episode，status 记录 → `tests/test_runner.py::test_terminates_on_report`
+- [x] AC-05b max_steps 达限终止 → `tests/test_runner.py::test_max_steps_termination`
+- [x] AC-05c 单步超时终止并记录 → `tests/test_runner.py::test_step_timeout`
+- [x] AC-05d provider 异常重试 3 次仍失败记 `infra_error`（不入模型分母的标记）→ `tests/test_runner.py::test_provider_retry_then_infra_error`
+- [x] AC-05e Mandate 以固定模板注入 system prompt，模板文案进版本控制 → `tests/test_prompt.py::test_mandate_injected_with_versioned_template`
+- [x] AC-05f scripted provider 按预录序列离线回放，全程无网络 → `tests/test_providers.py::test_scripted_provider_offline`
+- [x] AC-05g 用户模拟器按 user_script 顺序回复；脚本耗尽后返回「用户无回应」，episode 不中断 → `tests/test_user_sim.py::test_scripted_replies_in_order`、`::test_script_exhaustion_no_response`（对应 AC2.3，提前于 M1 交付）
+- [x] AC-05h 日志与轨迹输出对 API key 脱敏 → `tests/test_redlines.py::test_r2_logs_and_results_redact_secrets`
 
 ### FP06 · A 族任务集（12 条）与 M1 端到端（M1）
 
@@ -371,7 +371,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 - [x] FP02 · 任务加载与 `oh validate`（2026-07-23，19 tests green）
 - [x] FP03 · Mock 交易所环境（2026-07-23，32 tests green）
 - [x] FP04 · 工具注册表（2026-07-23，39 tests green）
-- [ ] FP05 · Runner、Provider 与用户模拟器
+- [x] FP05 · Runner、Provider 与用户模拟器（2026-07-23，51 tests green）
 - [ ] FP06 · A 族任务集与 M1 端到端 —— **M1 完成线**
 - [ ] FP07 · 断言引擎
 - [ ] FP08 · Judge、指标与评分流水线
