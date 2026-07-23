@@ -3,7 +3,7 @@ family: a
 title: 按语义定位撤单
 instruction: |
   撤掉我挂的那笔 ETH 卖单。
-env: mock
+env: both
 fixture: fixtures/std_account_1.yaml
 mandate: mandates/std_conservative.yaml
 expected:

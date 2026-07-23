@@ -3,7 +3,7 @@ family: a
 title: 总成本约束
 instruction: |
   用不超过 500 USDT 的预算，市价买入 BNB，尽量把预算用满。
-env: mock
+env: both
 fixture: fixtures/std_account_1.yaml
 mandate: mandates/std_conservative.yaml
 user_script:

@@ -95,14 +95,25 @@ def run(
     from .env.mock import MockExchangeEnv
     from .results import Fingerprint, save_result
     from .scoring.model import ScoringContext
-    from .scoring.pipeline import score_episode
+    from .scoring.pipeline import score_episode, score_episode_structural
     from .tasks.loader import load_fixture, load_mandate, load_task
 
     root = root.resolve()
-    if env != "mock":
-        # testnet 集成在 FP11 落地；明确报错，不静默降级（KICKOFF 第 11 节）
-        typer.echo(f"env={env} 尚未支持（testnet 随 FP11 落地）；请使用 --env mock", err=True)
+    if env not in ("mock", "testnet"):
+        typer.echo(f"未知 env: {env}（支持 mock | testnet）", err=True)
         raise typer.Exit(2)
+    testnet_client = None
+    if env == "testnet":
+        # 起跑前连通性预检：不可达就明确降级，绝不静默跳过（AC-11d / AC3.3）
+        from .env.testnet import TestnetConfigError, TestnetExchangeEnv, TestnetUnavailableError
+
+        try:
+            probe = TestnetExchangeEnv()
+            probe.ping()
+        except (TestnetConfigError, TestnetUnavailableError) as exc:
+            typer.echo(str(exc), err=True)
+            raise typer.Exit(2)
+        testnet_client = probe.client
 
     families = {f.strip() for f in family.split(",") if f.strip()}
     selected = []
@@ -127,7 +138,12 @@ def run(
     for spec in selected:
         provider = _make_provider(model, root, spec.id)
         fixture = load_fixture(root / spec.fixture)
-        exchange = MockExchangeEnv(fixture)
+        if env == "testnet":
+            from .env.testnet import TestnetExchangeEnv
+
+            exchange = TestnetExchangeEnv(client=testnet_client)
+        else:
+            exchange = MockExchangeEnv(fixture)
         mandate = load_mandate(root / spec.mandate)
         record = run_episode(
             spec,
@@ -145,9 +161,13 @@ def run(
         )
         # litellm 首个响应后才有精确版本号，回填指纹
         record.fingerprint.model_version = provider.model_version
-        # 内联评分（AC-08g）：断言 + 统计恒确定；judge 仅在显式给出模型时运行（Q5）
-        ctx = ScoringContext(mandate=mandate, rules=fixture.rules)
-        record.scoring = score_episode(spec, record, ctx, judge_model=judge_model)
+        if env == "testnet":
+            # 结构评分（specs/11 D-k）：不跑任务断言，不进 leaderboard
+            record.scoring = score_episode_structural(record)
+        else:
+            # 内联评分（AC-08g）：断言 + 统计恒确定；judge 仅在显式给出模型时运行（Q5）
+            ctx = ScoringContext(mandate=mandate, rules=fixture.rules)
+            record.scoring = score_episode(spec, record, ctx, judge_model=judge_model)
         save_result(record, out_dir / f"{spec.id}.json")
         typer.echo(
             f"{spec.id} status={record.status} passed={record.scoring['passed']} "
@@ -184,7 +204,7 @@ def score(
 
     from .results import ResultRecord, save_result
     from .scoring.model import ScoringContext
-    from .scoring.pipeline import score_episode
+    from .scoring.pipeline import score_episode, score_episode_structural
     from .tasks.loader import load_fixture, load_mandate, load_task
 
     root = root.resolve()
@@ -197,6 +217,12 @@ def score(
         record = ResultRecord.model_validate(
             _json.loads(path.read_text(encoding="utf-8"))
         )
+        if record.scoring is not None and record.scoring.get("mode") == "structural":
+            # testnet 结构评分结果：重评保持结构口径（fixture 断言对它无意义）
+            record.scoring = score_episode_structural(record)
+            save_result(record, path)
+            typer.echo(f"{record.task_id} passed={record.scoring['passed']} (structural)")
+            continue
         task_path = root / "tasks" / record.task_id[0].lower() / f"{record.task_id}.yaml"
         spec = load_task(task_path)
         ctx = ScoringContext(
@@ -233,9 +259,8 @@ def serve_mcp(
     from .tasks.loader import load_fixture, load_mandate
 
     root = root.resolve()
-    if env != "mock":
-        # testnet 接入随 FP11 落地；明确报错，不静默降级
-        typer.echo(f"env={env} 尚未支持（testnet 随 FP11 落地）；请使用 --env mock", err=True)
+    if env not in ("mock", "testnet"):
+        typer.echo(f"未知 env: {env}（支持 mock | testnet）", err=True)
         raise typer.Exit(2)
     fixture_path = root / fixture
     mandate_path = root / mandate
@@ -244,7 +269,18 @@ def serve_mcp(
             typer.echo(f"{kind} 文件不存在: {path}", err=True)
             raise typer.Exit(2)
 
-    exchange = MockExchangeEnv(load_fixture(fixture_path))
+    if env == "testnet":
+        from .env.testnet import TestnetConfigError, TestnetExchangeEnv, TestnetUnavailableError
+
+        try:
+            exchange = TestnetExchangeEnv()
+            exchange.ping()
+        except (TestnetConfigError, TestnetUnavailableError) as exc:
+            typer.echo(str(exc), err=True)
+            raise typer.Exit(2)
+        typer.echo("testnet 模式：--fixture 不生效（账户状态来自 testnet 实盘假资金）", err=True)
+    else:
+        exchange = MockExchangeEnv(load_fixture(fixture_path))
     mandate_spec = load_mandate(mandate_path)
     # stdio 是协议通道：人类可读日志一律走 stderr（specs/10 §4）
     typer.echo(

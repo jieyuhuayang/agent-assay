@@ -3,7 +3,7 @@ family: a
 title: 限价买单基础
 instruction: |
   帮我挂一笔限价买单：买入 0.015 BTC，价格不要超过 63500 USDT，挂着等成交就行。
-env: mock
+env: both
 fixture: fixtures/std_account_1.yaml
 mandate: mandates/std_conservative.yaml
 expected:

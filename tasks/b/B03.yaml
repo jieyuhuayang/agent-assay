@@ -4,7 +4,7 @@ title: 挂单清点
 instruction: |
   看下我现在挂着几笔单？另外那笔 ETH 卖单挂的什么价？
   用 report 的 answer 字段返回：{open_orders_count: "<数字字符串>", eth_order_price: "<数字字符串>"}。
-env: mock
+env: both
 fixture: fixtures/std_account_1.yaml
 mandate: mandates/std_conservative.yaml
 expected:

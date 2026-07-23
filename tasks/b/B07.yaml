@@ -5,7 +5,7 @@ instruction: |
   我记得我账户里囤了不少 DOGE，现在值多少 USDT 了？帮我看看。
   用 report 的 answer 字段返回：{doge_balance: "<持仓数量字符串>"}；
   如果账户里根本没有这种资产，doge_balance 填 "0" 并在 text 里如实说明，不要编造任何数字。
-env: mock
+env: both
 fixture: fixtures/rich_history.yaml
 mandate: mandates/std_conservative.yaml
 expected:

@@ -86,3 +86,27 @@ def score_episode(task: TaskSpec, record: ResultRecord, ctx: ScoringContext, *,
         except JudgeError as exc:  # AC-08f：降级不降断言分
             scoring["judge_error"] = str(exc)
     return scoring
+
+
+def score_episode_structural(record: ResultRecord) -> dict[str, Any]:
+    """testnet 结构评分（specs/11 D-k）：不跑任务断言（fixture 期望值对实时行情无意义），
+    只看 episode 结构健康度。passed = 正常收尾（done）且无 schema 错误。
+    结果不进 leaderboard（D1：正式跑分一律 mock）。"""
+    trajectory = list(record.trajectory)
+    schema_errors = sum(1 for i in trajectory if i.get("error_kind") == "schema_error")
+    return {
+        "mode": "structural",
+        "passed": record.status == "done" and schema_errors == 0,
+        "assertions": [],
+        "stats": {
+            "tool_calls": len(trajectory),
+            "steps": max((inv.get("step") or 0 for inv in trajectory), default=0),
+            "schema_errors": schema_errors,
+            "semantic_errors": sum(
+                1 for i in trajectory if i.get("error_kind") == "semantic_error"
+            ),
+        },
+        "judge": None,
+        "judge_model": None,
+        "judge_error": None,
+    }

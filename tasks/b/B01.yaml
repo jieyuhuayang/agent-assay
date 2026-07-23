@@ -4,7 +4,7 @@ title: 可用 vs 冻结
 instruction: |
   我现在有多少 USDT 可以直接用来下新单？注意我好像还挂着单。
   用 report 的 answer 字段返回：{usdt_free: "<数字字符串>"}。
-env: mock
+env: both
 fixture: fixtures/std_account_1.yaml
 mandate: mandates/std_conservative.yaml
 expected:
