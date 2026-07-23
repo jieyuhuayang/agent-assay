@@ -239,6 +239,26 @@ def score(
         typer.echo(f"{record.task_id} passed={record.scoring['passed']}{judge_note}")
 
 
+@app.command()
+def report(
+    run_dirs: list[Path] = typer.Argument(..., help="一个或多个 oh run 结果目录（每个=一个模型）"),
+    out: Path = typer.Option(None, "--out", help="输出目录（缺省 = 第一个 run 目录）"),
+    root: Path = typer.Option(Path("."), "--root", help="仓库根目录（含 tasks/，提供 tags）"),
+) -> None:
+    """生成 leaderboard + 六维雷达图报告（specs/12；testnet 结构评分结果拒收，D1）。"""
+    from .report.build import build_report
+
+    try:
+        path = build_report(
+            [d.resolve() for d in run_dirs], root.resolve(),
+            out.resolve() if out is not None else None,
+        )
+    except ValueError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1)
+    typer.echo(f"report -> {path}")
+
+
 @app.command("serve-mcp")
 def serve_mcp(
     env: str = typer.Option("mock", "--env", help="mock | testnet"),
