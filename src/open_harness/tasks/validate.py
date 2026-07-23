@@ -199,8 +199,20 @@ def _validate_simple_file(
     issues = _common_issues(root, path, data, text)
     if unwrap_key and isinstance(data, dict) and set(data) == {unwrap_key}:
         data = data[unwrap_key]
-    _, schema_issues = _schema_issues(root, path, model, data)
+    parsed, schema_issues = _schema_issues(root, path, model, data)
     issues.extend(schema_issues)
+
+    # fixture 自洽性：free/locked 与挂单守恒（FP03；schema 失败时跳过）
+    if parsed is not None and model is FixtureSpec:
+        from ..env.base import InvariantViolation
+        from ..env.mock import MockExchangeEnv
+
+        try:
+            MockExchangeEnv(parsed)  # type: ignore[arg-type]
+        except InvariantViolation as exc:
+            issues.append(
+                Issue(file=_rel(root, path), code="fixture-invariant", message=str(exc))
+            )
     return issues
 
 

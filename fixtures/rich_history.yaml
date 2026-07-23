@@ -1,0 +1,70 @@
+# B 族流水丰富账户：无挂单；成交覆盖多日（B04 计数、B05 BNB FIFO）、充提跨月（B10 时间窗）。
+balances:
+  USDT: {free: "10000", locked: "0"}
+  BNB: {free: "30", locked: "0"}
+  BTC: {free: "0.2", locked: "0"}
+
+open_orders: []
+
+rules:
+  BTCUSDT:
+    base: BTC
+    quote: USDT
+    step_size: "0.00001"
+    min_qty: "0.00001"
+    min_notional: "5"
+    tick_size: "0.01"
+    price_min: "0.01"
+    price_max: "1000000"
+    maker_fee: "0.001"
+    taker_fee: "0.001"
+  BNBUSDT:
+    base: BNB
+    quote: USDT
+    step_size: "0.001"
+    min_qty: "0.001"
+    min_notional: "5"
+    tick_size: "0.01"
+    price_min: "0.01"
+    price_max: "10000"
+    maker_fee: "0.001"
+    taker_fee: "0.001"
+
+tickers:
+  BTCUSDT:
+    bid: "64480.00"
+    ask: "64520.00"
+    last: "64500.00"
+    high_24h: "65200.00"
+    low_24h: "63800.00"
+    volume_24h: "12345.6"
+  BNBUSDT:
+    bid: "580.10"
+    ask: "580.50"
+    last: "580.30"
+    high_24h: "590.00"
+    low_24h: "570.00"
+    volume_24h: "45678.9"
+
+# BNB FIFO 素材（B05，一周内）：买 10@550、买 5@560，卖 8@580、卖 4@575
+# BTC 成交计数素材（B04）：2026-07-10 三笔、2026-07-11 两笔
+trades:
+  - {trade_id: "H-1001", symbol: BTCUSDT, side: buy, price: "62800.00", qty: "0.05", fee: "0.00005", fee_asset: BTC, timestamp: "2026-07-10T09:01:00Z"}
+  - {trade_id: "H-1002", symbol: BTCUSDT, side: buy, price: "62900.00", qty: "0.05", fee: "0.00005", fee_asset: BTC, timestamp: "2026-07-10T13:20:00Z"}
+  - {trade_id: "H-1003", symbol: BTCUSDT, side: sell, price: "63500.00", qty: "0.04", fee: "2.54", fee_asset: USDT, timestamp: "2026-07-10T18:45:00Z"}
+  - {trade_id: "H-1004", symbol: BTCUSDT, side: buy, price: "63100.00", qty: "0.06", fee: "0.00006", fee_asset: BTC, timestamp: "2026-07-11T10:05:00Z"}
+  - {trade_id: "H-1005", symbol: BTCUSDT, side: sell, price: "63800.00", qty: "0.02", fee: "1.276", fee_asset: USDT, timestamp: "2026-07-11T16:30:00Z"}
+  - {trade_id: "H-1006", symbol: BNBUSDT, side: buy, price: "550.00", qty: "10", fee: "0.01", fee_asset: BNB, timestamp: "2026-07-13T09:00:00Z"}
+  - {trade_id: "H-1007", symbol: BNBUSDT, side: buy, price: "560.00", qty: "5", fee: "0.005", fee_asset: BNB, timestamp: "2026-07-14T11:30:00Z"}
+  - {trade_id: "H-1008", symbol: BNBUSDT, side: sell, price: "580.00", qty: "8", fee: "4.64", fee_asset: USDT, timestamp: "2026-07-16T14:00:00Z"}
+  - {trade_id: "H-1009", symbol: BNBUSDT, side: sell, price: "575.00", qty: "4", fee: "2.30", fee_asset: USDT, timestamp: "2026-07-17T15:45:00Z"}
+
+transfers:
+  - {transfer_id: "D-2001", type: deposit, asset: USDT, amount: "5000", timestamp: "2026-06-05T08:00:00Z"}
+  - {transfer_id: "D-2002", type: deposit, asset: USDT, amount: "5000", timestamp: "2026-06-20T09:30:00Z"}
+  - {transfer_id: "W-2003", type: withdraw, asset: USDT, amount: "1000", address: "MockWithdrawDestAAA", network: MOCKNET, timestamp: "2026-07-02T10:00:00Z"}
+  - {transfer_id: "D-2004", type: deposit, asset: BNB, amount: "20", timestamp: "2026-07-08T12:00:00Z"}
+  - {transfer_id: "W-2005", type: withdraw, asset: USDT, amount: "500", address: "MockWithdrawDestAAA", network: MOCKNET, timestamp: "2026-07-18T17:20:00Z"}
+
+mock:
+  start_time: "2026-07-20T00:00:00Z"

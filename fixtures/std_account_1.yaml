@@ -1,0 +1,108 @@
+# 常规多资产账户（A/C 族默认）。locked 与 open_orders 严格自洽（invariant）：
+#   OO-1001 买 0.01 BTC @ 64000 → 冻结 USDT 640
+#   OO-1002 卖 2 ETH @ 3600    → 冻结 ETH 2
+balances:
+  USDT: {free: "2500", locked: "640"}
+  BTC: {free: "0.5", locked: "0"}
+  ETH: {free: "8", locked: "2"}
+  BNB: {free: "20", locked: "0"}
+
+open_orders:
+  - order_id: "OO-1001"
+    symbol: BTCUSDT
+    side: buy
+    type: limit
+    qty: "0.01"
+    price: "64000"
+  - order_id: "OO-1002"
+    symbol: ETHUSDT
+    side: sell
+    type: limit
+    qty: "2"
+    price: "3600"
+
+rules:
+  BTCUSDT:
+    base: BTC
+    quote: USDT
+    step_size: "0.00001"
+    min_qty: "0.00001"
+    min_notional: "5"
+    tick_size: "0.01"
+    price_min: "0.01"
+    price_max: "1000000"
+    maker_fee: "0.001"
+    taker_fee: "0.001"
+  ETHUSDT:
+    base: ETH
+    quote: USDT
+    step_size: "0.0001"
+    min_qty: "0.0001"
+    min_notional: "5"
+    tick_size: "0.01"
+    price_min: "0.01"
+    price_max: "100000"
+    maker_fee: "0.001"
+    taker_fee: "0.001"
+  BNBUSDT:
+    base: BNB
+    quote: USDT
+    step_size: "0.001"
+    min_qty: "0.001"
+    min_notional: "5"
+    tick_size: "0.01"
+    price_min: "0.01"
+    price_max: "10000"
+    maker_fee: "0.001"
+    taker_fee: "0.001"
+
+tickers:
+  BTCUSDT:
+    bid: "64480.00"
+    ask: "64520.00"
+    last: "64500.00"
+    high_24h: "65200.00"
+    low_24h: "63800.00"
+    volume_24h: "12345.6"
+  ETHUSDT:
+    bid: "3450.00"
+    ask: "3452.00"
+    last: "3451.00"
+    high_24h: "3510.00"
+    low_24h: "3390.00"
+    volume_24h: "98765.4"
+  BNBUSDT:
+    bid: "580.10"
+    ask: "580.50"
+    last: "580.30"
+    high_24h: "590.00"
+    low_24h: "570.00"
+    volume_24h: "45678.9"
+
+trades:
+  - trade_id: "T-8001"
+    symbol: BTCUSDT
+    side: buy
+    price: "63200.00"
+    qty: "0.2"
+    fee: "0.0002"
+    fee_asset: BTC
+    timestamp: "2026-07-15T09:30:01Z"
+  - trade_id: "T-8002"
+    symbol: ETHUSDT
+    side: buy
+    price: "3380.00"
+    qty: "5"
+    fee: "0.005"
+    fee_asset: ETH
+    timestamp: "2026-07-15T10:12:44Z"
+
+transfers:
+  - transfer_id: "D-3001"
+    type: deposit
+    asset: USDT
+    amount: "3000"
+    timestamp: "2026-07-01T08:00:00Z"
+
+mock:
+  start_time: "2026-07-20T00:00:00Z"

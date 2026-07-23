@@ -7,7 +7,7 @@ partial_fills 的规则结构由 FP03 定型，此处先以 dict 透传。
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any, Literal
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -54,8 +54,13 @@ class TransferFx(BaseModel):
 
 
 class SymbolRulesFx(BaseModel):
-    """LOT_SIZE / MIN_NOTIONAL / PRICE_FILTER / 费率（第 5 节 get_trading_rules 返回面）。"""
+    """LOT_SIZE / MIN_NOTIONAL / PRICE_FILTER / 费率（第 5 节 get_trading_rules 返回面）。
 
+    base/quote：symbol 的资产拆分（冻结与记账依据，如 BTCUSDT → BTC/USDT）。
+    """
+
+    base: str
+    quote: str
     step_size: Money
     min_qty: Money
     min_notional: Money
@@ -75,9 +80,18 @@ class TickerFx(BaseModel):
     volume_24h: Money
 
 
+class PartialFillRule(BaseModel):
+    """部分成交脚本（仅作用于市价单，按序消耗；供 A09）。"""
+
+    ratio: Money  # 成交比例 (0,1]
+    symbol: str | None = None
+    side: Literal["buy", "sell"] | None = None
+
+
 class MockConfig(BaseModel):
     slippage_bp: Money = Decimal("0")
-    partial_fills: list[dict[str, Any]] = []
+    start_time: str = "2026-07-20T00:00:00Z"  # 逻辑时钟起点（R4 确定性）
+    partial_fills: list[PartialFillRule] = []
 
 
 class FixtureSpec(BaseModel):
