@@ -84,12 +84,12 @@ commit 纪律：一个特性包一串连续 commit，`feat|fix|test|docs(scope):
 包骨架（第 12 节目录树）、pydantic v2 领域模型（Task / Fixture / Mandate / ResultRecord）、
 Decimal 类型策略（R9）、集中网络封装层与 URL 白名单（R1）、secret 只经环境变量 + 扫描（R2）、`.gitignore`（results/、.env）。
 
-- [ ] AC-01a `uv sync && uv run pytest` 在干净环境可运行，目录结构与 KICKOFF 第 12 节一致 → `tests/test_scaffold.py::test_package_importable_and_layout`
-- [ ] AC-01b 领域模型金额字段为 Decimal，float 输入被拒绝；YAML 数字字符串正确转 Decimal → `tests/test_schemas.py::test_money_fields_reject_float`、`::test_yaml_string_to_decimal`
-- [ ] AC-01c ResultRecord 强制环境指纹必填（模型名/版本、任务集版本、git commit、时间戳、温度）→ `tests/test_redlines.py::test_r11_result_schema_requires_fingerprint`
-- [ ] AC-01d 集中网络层拒绝白名单外域名（含 Binance 主网 `api.binance.com`）→ `tests/test_redlines.py::test_r1_url_whitelist_blocks_mainnet`
-- [ ] AC-01e secret 扫描：仓库无 key 样式字符串；key 仅可经环境变量读入 → `tests/test_redlines.py::test_r2_no_secrets_in_repo_files`、`::test_r2_api_key_only_from_env`
-- [ ] AC-01f 资金路径无 float：静态检查 src/ 资金模块禁用 float 字面量/构造 → `tests/test_redlines.py::test_r9_no_float_in_money_paths`
+- [x] AC-01a `uv sync && uv run pytest` 在干净环境可运行，目录结构与 KICKOFF 第 12 节一致 → `tests/test_scaffold.py::test_package_importable_and_layout`
+- [x] AC-01b 领域模型金额字段为 Decimal，float 输入被拒绝；YAML 数字字符串正确转 Decimal → `tests/test_schemas.py::test_money_fields_reject_float`、`::test_yaml_string_to_decimal`
+- [x] AC-01c ResultRecord 强制环境指纹必填（模型名/版本、任务集版本、git commit、时间戳、温度）→ `tests/test_redlines.py::test_r11_result_schema_requires_fingerprint`
+- [x] AC-01d 集中网络层拒绝白名单外域名（含 Binance 主网 `api.binance.com`）→ `tests/test_redlines.py::test_r1_url_whitelist_blocks_mainnet`
+- [x] AC-01e secret 扫描：仓库无 key 样式字符串；key 仅可经环境变量读入 → `tests/test_redlines.py::test_r2_no_secrets_in_repo_files`、`::test_r2_api_key_only_from_env`
+- [x] AC-01f 资金路径无 float：静态检查 src/ 资金模块禁用 float 字面量/构造 → `tests/test_redlines.py::test_r9_no_float_in_money_paths`
 
 ### FP02 · 任务/fixture/mandate 加载与 `oh validate`（M1）
 
@@ -367,7 +367,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 
 ## 6. 进度勾选（特性包级）
 
-- [ ] FP01 · 项目脚手架与领域模型
+- [x] FP01 · 项目脚手架与领域模型（2026-07-23，10 tests green）
 - [ ] FP02 · 任务加载与 `oh validate`
 - [ ] FP03 · Mock 交易所环境
 - [ ] FP04 · 工具注册表
