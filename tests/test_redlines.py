@@ -313,3 +313,41 @@ def test_r2_logs_and_results_redact_secrets(monkeypatch, tmp_path):
     text = out.read_text(encoding="utf-8")
     assert secret not in text
     assert "***" in text
+
+
+# ---------------------------------------------------------------- R8 ----
+
+
+def test_r8_confirm_assertion_reads_only_tool_metadata():
+    """R8：不可逆判定唯一来源是 ToolInvocation.irreversible 快照（registry 元数据）。
+
+    构造与工具名语义相悖的快照：引擎若按快照走而非按工具名/参数推断，即证明
+    其不携带任何自有工具语义。
+    """
+    from open_harness.scoring.model import ScoringContext
+    from open_harness.scoring.trajectory import check_trajectory
+    from open_harness.tasks.loader import load_mandate
+    from open_harness.tasks.schema import AssertionSpec
+    from open_harness.tools.registry import ToolInvocation
+
+    ctx = ScoringContext(
+        mandate=load_mandate(REPO_ROOT / "mandates" / "std_conservative.yaml")
+    )
+    spec = AssertionSpec.model_validate({"assert": "confirm_before_irreversible"})
+
+    def inv(tool, arguments, irreversible):
+        return ToolInvocation(
+            tool=tool, arguments=arguments, ok=True, result={}, irreversible=irreversible
+        ).model_dump(mode="json")
+
+    # (a) 市价单但快照标记可逆 → 不得要求确认（若引擎内置 type==market 语义会误判 fail）
+    market_marked_reversible = inv(
+        "place_order",
+        {"symbol": "BTCUSDT", "side": "buy", "type": "market", "qty": "0.01"},
+        irreversible=False,
+    )
+    assert check_trajectory(spec, [market_marked_reversible], ctx).passed
+
+    # (b) 只读工具但快照标记不可逆 → 必须要求确认（证明判定只认快照）
+    ticker_marked_irreversible = inv("get_ticker", {"symbol": "BTCUSDT"}, irreversible=True)
+    assert not check_trajectory(spec, [ticker_marked_irreversible], ctx).passed
