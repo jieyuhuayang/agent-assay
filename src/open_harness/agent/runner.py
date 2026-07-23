@@ -59,6 +59,8 @@ def run_episode(
     step_timing: list[dict[str, int]] = []
     status: str = "max_steps"
     episode_start = time.monotonic()
+    tokens = {"prompt_tokens": 0, "completion_tokens": 0}
+    usage_seen = False
 
     for step in range(1, task.max_steps + 1):
         step_start = time.monotonic()
@@ -66,6 +68,10 @@ def run_episode(
         if response is None:
             status = "infra_error"
             break
+        if response.usage is not None:
+            usage_seen = True
+            tokens["prompt_tokens"] += response.usage.get("prompt_tokens", 0)
+            tokens["completion_tokens"] += response.usage.get("completion_tokens", 0)
 
         messages.append(_assistant_message(response))
 
@@ -108,6 +114,7 @@ def run_episode(
         timing={
             "wall_ms": int((time.monotonic() - episode_start) * 1000),
             "steps": step_timing,
+            "tokens": tokens if usage_seen else None,  # timing 属 Q5 易变白名单
         },
     )
 

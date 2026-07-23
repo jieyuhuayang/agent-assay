@@ -84,13 +84,18 @@ def run(
     task: str = typer.Option(None, "--task", help="只跑指定任务 ID"),
     out: Path = typer.Option(None, "--out", help="结果输出目录"),
     root: Path = typer.Option(Path("."), "--root", help="仓库根目录"),
+    judge_model: str = typer.Option(
+        None, "--judge-model", help="judge 模型（litellm 名）；缺省不跑 judge（Q5）"
+    ),
 ) -> None:
-    """在指定环境跑任务集，逐任务落盘结果 JSON（含指纹，R11）。"""
+    """跑任务集并内联评分（AC-08g），逐任务落盘结果 JSON（含指纹，R11）。"""
     from datetime import datetime, timezone
 
     from .agent.runner import run_episode
     from .env.mock import MockExchangeEnv
     from .results import Fingerprint, save_result
+    from .scoring.model import ScoringContext
+    from .scoring.pipeline import score_episode
     from .tasks.loader import load_fixture, load_mandate, load_task
 
     root = root.resolve()
@@ -121,7 +126,8 @@ def run(
 
     for spec in selected:
         provider = _make_provider(model, root, spec.id)
-        exchange = MockExchangeEnv(load_fixture(root / spec.fixture))
+        fixture = load_fixture(root / spec.fixture)
+        exchange = MockExchangeEnv(fixture)
         mandate = load_mandate(root / spec.mandate)
         record = run_episode(
             spec,
@@ -139,8 +145,14 @@ def run(
         )
         # litellm 首个响应后才有精确版本号，回填指纹
         record.fingerprint.model_version = provider.model_version
+        # 内联评分（AC-08g）：断言 + 统计恒确定；judge 仅在显式给出模型时运行（Q5）
+        ctx = ScoringContext(mandate=mandate, rules=fixture.rules)
+        record.scoring = score_episode(spec, record, ctx, judge_model=judge_model)
         save_result(record, out_dir / f"{spec.id}.json")
-        typer.echo(f"{spec.id} status={record.status} steps={len(record.trajectory)}")
+        typer.echo(
+            f"{spec.id} status={record.status} passed={record.scoring['passed']} "
+            f"steps={len(record.trajectory)}"
+        )
 
     meta = {
         "model": model,
@@ -157,3 +169,45 @@ def run(
         _json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     typer.echo(f"results -> {out_dir}")
+
+
+@app.command()
+def score(
+    run_dir: Path = typer.Argument(..., help="oh run 产出的结果目录"),
+    judge_model: str = typer.Option(
+        None, "--judge-model", help="judge 模型（litellm 名），可替换重评；缺省不跑 judge"
+    ),
+    root: Path = typer.Option(Path("."), "--root", help="仓库根目录（含 tasks/）"),
+) -> None:
+    """对既有 run 目录离线（重）评分：断言 + 统计幂等重算，judge 可换模型（AC-08d）。"""
+    import json as _json
+
+    from .results import ResultRecord, save_result
+    from .scoring.model import ScoringContext
+    from .scoring.pipeline import score_episode
+    from .tasks.loader import load_fixture, load_mandate, load_task
+
+    root = root.resolve()
+    files = sorted(p for p in run_dir.glob("*.json") if p.name != "meta.json")
+    if not files:
+        typer.echo(f"{run_dir} 下没有结果文件", err=True)
+        raise typer.Exit(1)
+
+    for path in files:
+        record = ResultRecord.model_validate(
+            _json.loads(path.read_text(encoding="utf-8"))
+        )
+        task_path = root / "tasks" / record.task_id[0].lower() / f"{record.task_id}.yaml"
+        spec = load_task(task_path)
+        ctx = ScoringContext(
+            mandate=load_mandate(root / spec.mandate),
+            rules=load_fixture(root / spec.fixture).rules,
+        )
+        record.scoring = score_episode(spec, record, ctx, judge_model=judge_model)
+        save_result(record, path)  # 唯一落盘路径（R2 脱敏）
+        judge_note = ""
+        if record.scoring["judge"] is not None:
+            judge_note = f" judge={record.scoring['judge']['quality']}"
+        elif record.scoring["judge_error"]:
+            judge_note = " judge=error"
+        typer.echo(f"{record.task_id} passed={record.scoring['passed']}{judge_note}")

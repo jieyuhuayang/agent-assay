@@ -1,7 +1,7 @@
 """结果 schema：环境指纹必填（红线 R11）。
 
 trajectory / final_state / scoring 在 FP01 先留宽类型，由 FP05 / FP07 / FP08 收紧；
-M1 过渡形态 scoring=None，评分由 ``oh score`` 回填（specs/00 · Q1(a)）。
+scoring 自 FP08 起由 ``oh run`` 内联填充（AC-08g），``oh score`` 可离线重评/补跑 judge。
 """
 
 from __future__ import annotations

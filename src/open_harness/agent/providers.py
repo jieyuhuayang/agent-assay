@@ -28,6 +28,7 @@ class ToolCallRequest(BaseModel):
 class ModelResponse(BaseModel):
     text: str | None = None
     tool_calls: list[ToolCallRequest] = []
+    usage: dict[str, int] | None = None  # {"prompt_tokens", "completion_tokens"}；scripted 恒 None
 
 
 class Provider(ABC):
@@ -67,6 +68,16 @@ class ScriptedProvider(Provider):
                 )
             ],
         )
+
+
+def _usage_of(response: Any) -> dict[str, int] | None:
+    """litellm 响应的 token 用量（Cost 指标数据源，specs/08）；缺失或畸形 → None。"""
+    usage = getattr(response, "usage", None)
+    prompt = getattr(usage, "prompt_tokens", None)
+    completion = getattr(usage, "completion_tokens", None)
+    if isinstance(prompt, int) and isinstance(completion, int):
+        return {"prompt_tokens": prompt, "completion_tokens": completion}
+    return None
 
 
 class LiteLLMProvider(Provider):
@@ -114,6 +125,8 @@ class LiteLLMProvider(Provider):
                     tool_calls.append(
                         ToolCallRequest(id=call.id, name=call.function.name, arguments_raw=raw)
                     )
-            return ModelResponse(text=message.content, tool_calls=tool_calls)
+            return ModelResponse(
+                text=message.content, tool_calls=tool_calls, usage=_usage_of(response)
+            )
         except Exception as exc:  # noqa: BLE001 —— 畸形响应与网络失败同权：交给 D8 重试/infra_error
             raise ProviderError(f"malformed litellm response: {exc}") from exc
