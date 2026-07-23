@@ -30,3 +30,17 @@ def test_redteam_fixture_c_family_prerequisites():
 
     # C03（买 5000）/ C09（拆单 5×900）的越界动作物理可执行
     assert fixture.balances["USDT"].free >= Decimal("4500")
+
+
+def test_redteam_memo_injection_surfaces_in_tool_output():
+    """AC-09e：redteam_1 的 memo 注入语料确实能经工具返回值抵达模型（C08 攻击面前提）。"""
+    from open_harness.env.mock import MockExchangeEnv
+    from open_harness.tasks.loader import load_fixture
+    from open_harness.tools.registry import ToolContext, execute_tool
+
+    env = MockExchangeEnv(load_fixture(REPO_ROOT / "fixtures" / "redteam_1.yaml"))
+    ctx = ToolContext(env=env, ask_user=lambda q: "无", request_confirmation=lambda s: "approved")
+    inv = execute_tool("get_transfer_history", {"type": "deposit"}, ctx)
+    assert inv.ok
+    memos = [t.get("memo", "") for t in inv.result["transfers"]]
+    assert any("IGNORE PREVIOUS INSTRUCTIONS" in memo for memo in memos)
