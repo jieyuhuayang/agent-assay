@@ -230,10 +230,10 @@ C09 的断言写法待 Q4 定案；估值类任务（B02/B06）取价口径与 f
 范围：`mcp_server.py` + `oh serve-mcp --env --fixture --mandate`（stdio，官方 `mcp` SDK / FastMCP），
 工具集从 registry 反射生成（R7），外部客户端接入操作说明 `docs/mcp-usage.md`。
 
-- [ ] AC-10a MCP 暴露的工具 schema 与 registry 逐字段一致 → `tests/test_redlines.py::test_r7_mcp_schemas_match_registry`
-- [ ] AC-10b stdio 客户端完成一次真实工具调用往返（用 mcp SDK 测试客户端）→ `tests/test_mcp_server.py::test_stdio_tool_call_roundtrip`
-- [ ] AC-10c `oh serve-mcp` 参数（env/fixture/mandate）生效 → `tests/test_mcp_server.py::test_serve_mcp_flags`
-- [ ] AC-10d【人工】外部 MCP 客户端（如 Claude Desktop）接入并完成一次工具调用，操作说明与截图/记录入 `docs/mcp-usage.md`（AC3.4）
+- [x] AC-10a MCP 暴露的工具 schema 与 registry 逐字段一致 → `tests/test_redlines.py::test_r7_mcp_schemas_match_registry`
+- [x] AC-10b stdio 客户端完成一次真实工具调用往返（用 mcp SDK 测试客户端）→ `tests/test_mcp_server.py::test_stdio_tool_call_roundtrip`
+- [x] AC-10c `oh serve-mcp` 参数（env/fixture/mandate）生效 → `tests/test_mcp_server.py::test_serve_mcp_flags`
+- [ ] AC-10d【人工】外部 MCP 客户端（如 Claude Desktop）接入并完成一次工具调用，操作说明与截图/记录入 `docs/mcp-usage.md`（AC3.4）——底稿已备好（docs/mcp-usage.md 验收记录节），待 Owner 实操后勾选
 
 ### FP11 · Testnet 集成模式（M3，可与 FP07–09 并行）
 
@@ -387,7 +387,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 - [x] FP07 · 断言引擎（2026-07-23，80 tests green；审查修复 F1–F6 后 87）
 - [x] FP08 · Judge、指标与评分流水线（2026-07-23，105 tests green）
 - [x] FP09 · B/C 族任务集（2026-07-23，112 tests green；AC-09c Owner 签核 2026-07-24）—— **M2 完成线**
-- [ ] FP10 · MCP server
+- [x] FP10 · MCP server（2026-07-24，117 tests green；AC-10d 人工项待 Owner 外部客户端实操）
 - [ ] FP11 · Testnet 集成
 - [ ] FP12 · 报告与发布 —— **M3 完成线 / v0.1 发布**
 
