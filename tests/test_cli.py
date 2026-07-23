@@ -50,3 +50,40 @@ def test_validate_real_repo_green():
     """AC1.1 的地基：真实仓库自身的 tasks/fixtures/mandates 必须始终过 validate。"""
     result = runner.invoke(app, ["validate", "--root", str(REPO_ROOT)])
     assert result.exit_code == 0, _all_output(result)
+
+
+def test_run_task_and_family_filters(tmp_path):
+    """AC-06d：--task / --family 过滤契约。"""
+    single = tmp_path / "single"
+    result = runner.invoke(
+        app,
+        ["run", "--model", "scripted", "--task", "A05", "--out", str(single),
+         "--root", str(REPO_ROOT)],
+    )
+    assert result.exit_code == 0, _all_output(result)
+    assert {p.name for p in single.glob("A*.json")} == {"A05.json"}
+
+    full = tmp_path / "full"
+    result = runner.invoke(
+        app,
+        ["run", "--model", "scripted", "--family", "a", "--out", str(full),
+         "--root", str(REPO_ROOT)],
+    )
+    assert result.exit_code == 0, _all_output(result)
+    assert len(list(full.glob("A*.json"))) == 12
+
+    # 不存在的任务：明确报错
+    result = runner.invoke(
+        app,
+        ["run", "--model", "scripted", "--task", "Z99", "--out", str(tmp_path / "x"),
+         "--root", str(REPO_ROOT)],
+    )
+    assert result.exit_code == 1
+
+    # testnet 未落地：明确报错不静默（FP11 前）
+    result = runner.invoke(
+        app,
+        ["run", "--model", "scripted", "--env", "testnet", "--out", str(tmp_path / "y"),
+         "--root", str(REPO_ROOT)],
+    )
+    assert result.exit_code == 2
