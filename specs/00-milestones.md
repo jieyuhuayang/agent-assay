@@ -16,6 +16,12 @@
 > 部分成交脚本被失败单消耗、R6 扫描 CJK 边界失效、R2 抓不到 Binance 式无前缀 key 等）+
 > 4 条任务公平性问题（A01/A05 承诺额超 mandate 限额、A07/A08 不作为可白拿 pass、A09 补单歧义、
 > 确认脚本无余量），全部修复；回归守卫见 `tests/test_m1_review_fixes.py`。
+>
+> **FP07 对抗审查记录（2026-07-23）**：robustness 视角报 6 条（F1–F6），因 session limit 无
+> skeptic 投票，Owner 侧人工 triage 后全部采纳修复：F1/F2 非有限 Decimal（NaN/sNaN/∞，agent 可控）
+> 炸评分、F3 balance 对损坏结果文件裸抛、F4 confirm 检查对非 dict result 崩溃、F5 qty_step_aligned
+> 的 raise 边界随 episode 数据漂移、F6 step_size≤0 裸抛 InvalidOperation。回归守卫见
+> `tests/test_fp07_review_fixes.py`。semantics / fairness 两视角未跑成（session limit），待补跑。
 
 ---
 
@@ -195,13 +201,13 @@ scripted provider 跑通全生命周期（AC1.4）、≥1 真实模型端到端�
 回放一致性（R4 / AC2.5）。judge 挂接 `oh run` 的开关策略与 R4 比较口径见第 5 节 Q5
 （建议：scripted / 回放测试场景默认关闭 judge，judge 分由 `oh score` 离线补跑）。
 
-- [ ] AC-08a judge 输出为结构化对象（质量分 0–2 + 理由），类型上无 pass/fail 字段 → `tests/test_redlines.py::test_r3_judge_output_type_has_no_passfail`
-- [ ] AC-08b 断言 fail 的任务经 judge 后仍 fail（流水线级测试）→ `tests/test_redlines.py::test_r3_failed_assertion_stays_failed_after_judge`
-- [ ] AC-08c 九项指标公式按 9.2 实现，黄金用例覆盖（含 infra_error 不入 Task Success Rate 分母、单列统计）→ `tests/test_metrics.py::test_task_success_rate_excludes_infra_error`、`::test_tool_calling_accuracy`、`::test_param_hallucination_rate`、`::test_unsafe_action_rate`、`::test_overreach_rate`、`::test_clarification_rate`、`::test_over_refusal_rate`、`::test_judge_quality_mean`、`::test_cost_latency_aggregation`
-- [ ] AC-08d `oh score` 对既有 run 目录离线重评，judge 模型可配置替换 → `tests/test_cli.py::test_score_offline_rescore`
-- [ ] AC-08e R4 回放一致性：scripted provider 下同任务两次运行，结果文件逐字节一致；比较在 judge 关闭态下进行（不得依赖 AC-08f 的失败降级路径获得确定性），易变指纹字段（时间戳、墙钟）按 Q5 白名单剥离 → `tests/test_redlines.py::test_r4_scripted_replay_byte_identical`
-- [ ] AC-08f judge 调用走 litellm 且失败可降级为「跳过 judge、断言分保留」→ `tests/test_judge.py::test_judge_failure_degrades_gracefully`
-- [ ] AC-08g 评分内联回归：FP08 交付后 `oh run` 产出的结果 JSON 直接含 pass/fail、断言明细与（开启时的）judge 质量分，无需先跑 `oh score` → `tests/test_e2e.py::test_run_output_includes_scores`
+- [x] AC-08a judge 输出为结构化对象（质量分 0–2 + 理由），类型上无 pass/fail 字段 → `tests/test_redlines.py::test_r3_judge_output_type_has_no_passfail`
+- [x] AC-08b 断言 fail 的任务经 judge 后仍 fail（流水线级测试）→ `tests/test_redlines.py::test_r3_failed_assertion_stays_failed_after_judge`
+- [x] AC-08c 九项指标公式按 9.2 实现，黄金用例覆盖（含 infra_error 不入 Task Success Rate 分母、单列统计）→ `tests/test_metrics.py::test_task_success_rate_excludes_infra_error`、`::test_tool_calling_accuracy`、`::test_param_hallucination_rate`、`::test_unsafe_action_rate`、`::test_overreach_rate`、`::test_clarification_rate`、`::test_over_refusal_rate`、`::test_judge_quality_mean`、`::test_cost_latency_aggregation`
+- [x] AC-08d `oh score` 对既有 run 目录离线重评，judge 模型可配置替换 → `tests/test_cli.py::test_score_offline_rescore`
+- [x] AC-08e R4 回放一致性：scripted provider 下同任务两次运行，结果文件逐字节一致；比较在 judge 关闭态下进行（不得依赖 AC-08f 的失败降级路径获得确定性），易变指纹字段（时间戳、墙钟）按 Q5 白名单剥离 → `tests/test_redlines.py::test_r4_scripted_replay_byte_identical`
+- [x] AC-08f judge 调用走 litellm 且失败可降级为「跳过 judge、断言分保留」→ `tests/test_judge.py::test_judge_failure_degrades_gracefully`
+- [x] AC-08g 评分内联回归：FP08 交付后 `oh run` 产出的结果 JSON 直接含 pass/fail、断言明细与（开启时的）judge 质量分，无需先跑 `oh score` → `tests/test_e2e.py::test_run_output_includes_scores`
 
 ### FP09 · B 族（10 条）+ C 族（14 条）任务集（M2）
 
@@ -378,8 +384,8 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 - [x] FP04 · 工具注册表（2026-07-23，39 tests green）
 - [x] FP05 · Runner、Provider 与用户模拟器（2026-07-23，51 tests green）
 - [x] FP06 · A 族任务集与 M1 端到端（2026-07-23，55 tests green；AC-06e 待 Owner 提供模型 key 后跑真实模型）—— **M1 完成线**
-- [ ] FP07 · 断言引擎
-- [ ] FP08 · Judge、指标与评分流水线
+- [x] FP07 · 断言引擎（2026-07-23，80 tests green；审查修复 F1–F6 后 87）
+- [x] FP08 · Judge、指标与评分流水线（2026-07-23，105 tests green）
 - [ ] FP09 · B/C 族任务集 —— **M2 完成线**
 - [ ] FP10 · MCP server
 - [ ] FP11 · Testnet 集成
