@@ -289,6 +289,19 @@ def test_r7_no_tool_schema_outside_registry():
     assert not violations, f"registry 之外出现工具 schema 痕迹（R7）: {violations}"
 
 
+def test_r7_mcp_schemas_match_registry():
+    """AC-10a：MCP 暴露的工具与 registry 数量、顺序、name/description/inputSchema 逐字段一致。"""
+    from open_harness.mcp_server import build_mcp_tools
+    from open_harness.tools.registry import all_tools
+
+    mcp_tools = build_mcp_tools()
+    defs = all_tools()
+    assert [t.name for t in mcp_tools] == [d.name for d in defs]
+    for mcp_tool, tool_def in zip(mcp_tools, defs):
+        assert mcp_tool.description == tool_def.description, mcp_tool.name
+        assert mcp_tool.inputSchema == tool_def.json_schema(), mcp_tool.name
+
+
 def test_r2_logs_and_results_redact_secrets(monkeypatch, tmp_path):
     """FP05：结果落盘唯一路径 save_result 必过脱敏。"""
     from open_harness.results import Fingerprint, ResultRecord, save_result
