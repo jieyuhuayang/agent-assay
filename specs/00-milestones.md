@@ -164,10 +164,10 @@ scripted provider 跑通全生命周期（AC1.4）、≥1 真实模型端到端�
 注：M1 阶段结果 JSON 含轨迹+终态+指纹，pass/fail 评分待 FP07 断言引擎落地后由 `oh score` 回填（见第 5 节问题 Q1，待 Owner 确认）。
 此为**过渡形态**：FP08 交付时评分流水线并入 `oh run`，恢复 KICKOFF 第 3/12 节「run 内已含评分」契约（由 AC-08g 验收）。
 
-- [ ] AC-06a A01–A12 全部通过 `oh validate` → `tests/test_tasks_a.py::test_a_family_passes_validate`
-- [ ] AC-06b scripted provider 跑通 A01 全生命周期（加载→环境→循环→终止→落盘）→ `tests/test_e2e.py::test_scripted_a01_full_episode`
-- [ ] AC-06c 结果 JSON 含全部指纹字段且通过 ResultRecord 校验 → `tests/test_e2e.py::test_result_json_fingerprint_complete`
-- [ ] AC-06d `oh run --task` / `--family` 过滤行为正确 → `tests/test_cli.py::test_run_task_and_family_filters`
+- [x] AC-06a A01–A12 全部通过 `oh validate` → `tests/test_tasks_a.py::test_a_family_passes_validate`
+- [x] AC-06b scripted provider 跑通 A01 全生命周期（加载→环境→循环→终止→落盘）→ `tests/test_e2e.py::test_scripted_a01_full_episode`
+- [x] AC-06c 结果 JSON 含全部指纹字段且通过 ResultRecord 校验 → `tests/test_e2e.py::test_result_json_fingerprint_complete`
+- [x] AC-06d `oh run --task` / `--family` 过滤行为正确 → `tests/test_cli.py::test_run_task_and_family_filters`
 - [ ] AC-06e【integration】≥1 真实模型（litellm）在 mock 上跑完 A 族 12 任务并落盘 → `tests/test_e2e.py::test_real_model_a_family_smoke`（无 key 时 skip；正式验收由 Owner 跑一次记录 run_id）
 
 ### FP07 · 断言引擎（M2）
@@ -372,7 +372,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 - [x] FP03 · Mock 交易所环境（2026-07-23，32 tests green）
 - [x] FP04 · 工具注册表（2026-07-23，39 tests green）
 - [x] FP05 · Runner、Provider 与用户模拟器（2026-07-23，51 tests green）
-- [ ] FP06 · A 族任务集与 M1 端到端 —— **M1 完成线**
+- [x] FP06 · A 族任务集与 M1 端到端（2026-07-23，55 tests green；AC-06e 待 Owner 提供模型 key 后跑真实模型）—— **M1 完成线**
 - [ ] FP07 · 断言引擎
 - [ ] FP08 · Judge、指标与评分流水线
 - [ ] FP09 · B/C 族任务集 —— **M2 完成线**
