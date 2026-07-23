@@ -35,3 +35,16 @@ class ResultRecord(BaseModel):
     trajectory: list[Any] = []
     final_state: dict[str, Any] | None = None
     scoring: dict[str, Any] | None = None
+    transcript: list[dict[str, Any]] = []
+    timing: dict[str, Any] | None = None  # 易变字段：回放比较时按 Q5 白名单剥离
+
+
+def save_result(record: ResultRecord, path: Any) -> None:
+    """结果落盘的唯一路径：序列化后必过脱敏（R2）。"""
+    from pathlib import Path
+
+    from .secrets import redact
+
+    text = redact(record.model_dump_json(indent=2))
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
+    Path(path).write_text(text, encoding="utf-8")
