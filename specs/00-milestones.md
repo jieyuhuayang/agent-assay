@@ -253,11 +253,11 @@ URL 白名单接入 R1 网络层、`env: both` 任务抽样（约 8 条 A/B 族�
 **依赖说明**：AC-11a–11d 仅需 FP03/FP04（含 FP01 网络层），可先行交付并与 FP07–09 并行；
 AC-11e 需 FP06（runner + `oh run` + A 族语料）与 FP09（B 族语料）入库后编写，是本包最后一条。
 
-- [ ] AC-11a testnet client 仅访问 `testnet.binance.vision`，经集中网络层 → `tests/test_redlines.py::test_r1_testnet_client_uses_whitelisted_base`
-- [ ] AC-11b key 缺失时报错提示环境变量名，不接受任何其他来源 → `tests/test_testnet.py::test_keys_only_from_env`
-- [ ] AC-11c `withdraw` 在 testnet 模式返回 `simulated: true`，不发真实请求 → `tests/test_testnet.py::test_withdraw_simulated`
-- [ ] AC-11d 网络不可达时明确降级信息，不静默跳过 → `tests/test_testnet.py::test_network_failure_graceful_degradation`
-- [ ] AC-11e【integration】8 条 `env: both` 抽样任务 testnet 冒烟（结构断言）→ `tests/test_testnet_smoke.py::test_sampled_tasks_structural`（无 key/网络时 skip；AC3.3 允许降级信息替代）
+- [x] AC-11a testnet client 仅访问 `testnet.binance.vision`，经集中网络层 → `tests/test_redlines.py::test_r1_testnet_client_uses_whitelisted_base`（D-i 结构化剪枝：白名单外条目构造期删除）
+- [x] AC-11b key 缺失时报错提示环境变量名，不接受任何其他来源 → `tests/test_testnet.py::test_keys_only_from_env`
+- [x] AC-11c `withdraw` 在 testnet 模式返回 `simulated: true`，不发真实请求 → `tests/test_testnet.py::test_withdraw_simulated`
+- [x] AC-11d 网络不可达时明确降级信息，不静默跳过 → `tests/test_testnet.py::test_network_failure_graceful_degradation`
+- [ ] AC-11e【integration】8 条 `env: both` 抽样任务 testnet 冒烟（结构断言）→ `tests/test_testnet_smoke.py::test_sampled_tasks_structural`（无 key/网络时 skip；AC3.3 允许降级信息替代）——测试与抽样清单（A01/A02/A03/A06/A11/B01/B03/B07，specs/11 §4）已入库，待 Owner 提供 `OH_TESTNET_API_KEY/SECRET` 后实跑
 
 ### FP12 · 报告、三模型跑分与发布（M3）
 
@@ -398,7 +398,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 - [x] FP08 · Judge、指标与评分流水线（2026-07-23，105 tests green）
 - [x] FP09 · B/C 族任务集（2026-07-23，112 tests green；AC-09c Owner 签核 2026-07-24）—— **M2 完成线**
 - [x] FP10 · MCP server（2026-07-24，117 tests green；AC-10d 人工项待 Owner 外部客户端实操）
-- [ ] FP11 · Testnet 集成
+- [x] FP11 · Testnet 集成（2026-07-24，144 tests green；AC-11e 冒烟待 Owner testnet key 实跑）
 - [ ] FP12 · 报告与发布 —— **M3 完成线 / v0.1 发布**
 
 勾选纪律（R10）：特性包的全部 AC 测试绿 + Owner 对「人工」项签字后，方可打勾；
