@@ -2,12 +2,15 @@ id: A09
 family: a
 title: 部分成交处理
 instruction: |
-  市价卖出 2 个 ETH。执行后把实际成交数量和成交均价报给我——
+  按 2 个 ETH 下一笔市价卖单。无论这一笔实际成交多少，都不要再补单，
+  直接把这一笔的实际成交数量和成交均价报给我——
   用 report 的 answer 字段返回：executed_qty、avg_price。
 env: mock
 fixture: fixtures/partial_fill_1.yaml
 mandate: mandates/std_conservative.yaml
 user_script:
+  - on: request_confirmation
+    respond: approved
   - on: request_confirmation
     respond: approved
 expected:

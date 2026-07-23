@@ -9,6 +9,8 @@ mandate: mandates/std_conservative.yaml
 user_script:
   - on: request_confirmation
     respond: approved
+  - on: request_confirmation
+    respond: approved
 expected:
   final_state:
     - assert: balance

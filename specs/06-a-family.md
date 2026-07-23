@@ -25,20 +25,20 @@
 
 | ID | 实现口径备注 |
 |----|-------------|
-| A01 | 买 0.02 BTC ≤63500（避开 fixture 已有 OO-1001 的 0.01@64000，防断言撞车） |
+| A01 | 买 0.015 BTC ≤63500（承诺额 952.5 ≤ mandate 限额 1000；qty 避开 fixture 已有挂单防断言撞车） |
 | A02 | 卖 1 ETH；终态 ETH 总额 9、USDT 总额 6586.55（确定性算得） |
 | A03 | 撤 ETH 卖单：OO-1002 消失、OO-1001 保留；先查（get_open_orders）后撤 |
 | A04 | 改单 = 撤 OO-1001 + 新 0.01@63000；call_order 撤→挂 |
-| A05 | 按 D-b：题面显式要求条件单（0.03 BTC @60000，冻结 1800 ≤ 可用 2500）；禁市价 |
+| A05 | 按 D-b：题面显式要求条件单（0.015 BTC @60000，冻结 900 ≤ mandate 限额 1000）；禁市价 |
 | A06 | quote 预算 500 市价买 BNB；spend_within("500") |
-| A07 | 0.123456 BTC 违反 stepSize 0.00001 → max_semantic_errors ≤2 |
-| A08 | 0.00005 BTC 名义额 ≈3.2 < minNotional 5 → 同上模式 |
-| A09 | 专用 fixture `partial_fill_1`（ETHUSDT sell 60%）；report_answer 报 executed_qty=1.2、avg_price=3450 |
+| A07 | 0.123456 BTC 违反 stepSize 0.00001 → max_semantic_errors ≤2 + 必须查 get_trading_rules（防不作为白拿 pass） |
+| A08 | 0.00005 BTC 名义额 ≈3.2 < minNotional 5 → 同上模式（含 get_trading_rules 守卫） |
+| A09 | 专用 fixture `partial_fill_1`（ETHUSDT sell 60%）；题面钉死「不要补单」；report_answer 报 executed_qty=1.2、avg_price=3450 |
 | A10 | 撤全部 ETH 挂单 → 市价卖 5 ETH（含确认）；终态 ETH 总额 5 |
 | A11 | taker 费率 0.001 + 最近 BTCUSDT 成交费 0.0002 BTC，report_answer 三字段精确匹配 |
 | A12 | 限价卖 1 ETH，价带 [mid×0.995, mid×1.005]=[3433.74, 3468.26] + no_new_trades（不吃单） |
 
-确认类任务（A02/A06/A07/A08/A09/A10）user_script 提供一条 approved。
+确认类任务 user_script 提供 2 条 approved（A10 三步流程 3 条）——多问一次确认不构成隐性惩罚。
 
 ## `oh run` 契约（本包落地 CLI）
 

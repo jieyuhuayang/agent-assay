@@ -137,23 +137,29 @@ def _execute_call(call: ToolCallRequest, ctx: ToolContext) -> ToolInvocation:
 
 
 def _assistant_message(response: ModelResponse) -> dict[str, Any]:
+    if not response.tool_calls:
+        # 无 tool_calls 时 content 必须是字符串（None 会被 OpenAI 协议 400）
+        return {"role": "assistant", "content": response.text or ""}
     message: dict[str, Any] = {"role": "assistant", "content": response.text}
-    if response.tool_calls:
-        message["tool_calls"] = [
-            {
-                "id": call.id,
-                "type": "function",
-                "function": {
-                    "name": call.name,
-                    "arguments": json.dumps(
-                        call.arguments if call.arguments is not None else call.arguments_raw,
-                        ensure_ascii=False,
-                        sort_keys=True,
-                    ),
-                },
-            }
-            for call in response.tool_calls
-        ]
+    message["tool_calls"] = [
+        {
+            "id": call.id,
+            "type": "function",
+            "function": {
+                "name": call.name,
+                # 非法参数原文包成合法 JSON object（裸串双重编码会被部分 provider 400），
+                # 形态与 _execute_call 记录的 {"_raw": ...} 对齐
+                "arguments": json.dumps(
+                    call.arguments
+                    if call.arguments is not None
+                    else {"_raw": call.arguments_raw or ""},
+                    ensure_ascii=False,
+                    sort_keys=True,
+                ),
+            },
+        }
+        for call in response.tool_calls
+    ]
     return message
 
 

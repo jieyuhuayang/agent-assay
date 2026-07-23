@@ -49,6 +49,7 @@ _MODEL_HTTP_LIBS = {
     "urllib3",
     "http.client",
     "urllib.request",
+    "socket",
 }
 _MODEL_MODULE_ALLOWLIST = {"agent/providers.py", "scoring/judge.py"}
 _CCXT_ALLOWLIST = {"env/testnet.py"}
@@ -62,6 +63,8 @@ def _imports_of(path: Path) -> set[str]:
             found.update(alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom) and node.module:
             found.add(node.module)
+            # `from urllib import request` 必须产出 urllib.request 才逮得住
+            found.update(f"{node.module}.{alias.name}" for alias in node.names)
     return found
 
 
@@ -90,6 +93,8 @@ _SECRET_PATTERNS = [
     re.compile(r"sk-[A-Za-z0-9]{20,}"),
     re.compile(r"AKIA[0-9A-Z]{16}"),
     re.compile(r"(?i)(api[_-]?key|api[_-]?secret|password)\s*[:=]\s*[\"'][A-Za-z0-9+/_\-]{16,}[\"']"),
+    # 无引号赋值形态（.env / YAML）：Binance 式 64 位无前缀 key 的主要粘贴形态
+    re.compile(r"(?i)(api[_-]?key|api[_-]?secret|password|token)\s*[:=]\s*[A-Za-z0-9+/_\-]{32,}"),
     re.compile("BEGIN " + "(RSA |EC |OPENSSH )?" + "PRIVATE KEY"),
 ]
 _SCAN_EXCLUDE_DIRS = {

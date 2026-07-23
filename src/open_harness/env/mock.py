@@ -10,7 +10,7 @@
 from __future__ import annotations
 
 import itertools
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import ROUND_CEILING, ROUND_FLOOR, Decimal
 from typing import Any, Literal
 
@@ -121,7 +121,7 @@ class MockExchangeEnv(ExchangeEnv):
     ) -> OrderReceipt:
         rule = self._rule(symbol)
         self._validate_order_shape(type, qty, quote_qty, price, stop_price)
-        self._validate_filters(rule, type, qty, quote_qty, price, stop_price)
+        self._validate_filters(symbol, rule, type, qty, quote_qty, price, stop_price)
 
         if type == "market":
             receipt = self._execute_market(symbol, rule, side, qty, quote_qty)
@@ -250,6 +250,7 @@ class MockExchangeEnv(ExchangeEnv):
 
     def _validate_filters(
         self,
+        symbol: str,
         rule: SymbolRulesFx,
         type: str,
         qty: Decimal | None,
@@ -274,9 +275,8 @@ class MockExchangeEnv(ExchangeEnv):
             notional = quote_qty
         elif type == "market":
             assert qty is not None
-            ticker = self._tickers.get(rule.base + rule.quote)
-            ref = ticker.last if ticker else _ZERO
-            notional = qty * ref
+            # 与 _crosses/_exec_price 同口径：无行情快照 → INVALID_SYMBOL，不静默回退
+            notional = qty * self._ticker(symbol).last
         else:
             assert qty is not None and price is not None
             notional = qty * price
@@ -300,11 +300,10 @@ class MockExchangeEnv(ExchangeEnv):
             return _ceil_to(base_price * (1 + factor), rule.tick_size)
         return _floor_to(base_price * (1 - factor), rule.tick_size)
 
-    def _consume_partial_fill(self, symbol: str, side: str) -> Decimal | None:
+    def _peek_partial_fill(self, symbol: str, side: str) -> tuple[int, Decimal] | None:
         for i, r in enumerate(self._partial_fills):
             if (r.symbol is None or r.symbol == symbol) and (r.side is None or r.side == side):
-                del self._partial_fills[i]
-                return r.ratio
+                return i, r.ratio
         return None
 
     def _execute_market(
@@ -316,23 +315,28 @@ class MockExchangeEnv(ExchangeEnv):
         quote_qty: Decimal | None,
     ) -> OrderReceipt:
         exec_price = self._exec_price(symbol, rule, side, slip=True)
-        if qty is None:  # 市价按 quote 额买入（A06）
-            assert quote_qty is not None and side == "buy"
+        if qty is None:  # 市价按 quote 额（买卖双向，对齐 Binance quoteOrderQty 语义）
+            assert quote_qty is not None
             target_qty = _floor_to(quote_qty / exec_price, rule.step_size)
             if target_qty <= _ZERO:
                 raise ExchangeError("LOT_SIZE", f"quote_qty {quote_qty} 折算数量不足一个 stepSize")
         else:
             target_qty = qty
 
-        ratio = self._consume_partial_fill(symbol, side)
+        # 规则消耗与成交落账绑定：结算成功后才 del（失败订单不得吃掉脚本，A09 公平性）
+        peek = self._peek_partial_fill(symbol, side)
+        ratio = peek[1] if peek is not None else None
         fill_qty = target_qty if ratio is None else _floor_to(target_qty * ratio, rule.step_size)
         if fill_qty <= _ZERO:
             raise ExchangeError("LOT_SIZE", "部分成交脚本折算后成交量为 0")
         status = "filled" if fill_qty == target_qty else "partially_filled"
-        return self._settle_taker_fill(
+        receipt = self._settle_taker_fill(
             symbol, rule, side, "market", fill_qty, exec_price,
             requested_qty=qty, quote_qty=quote_qty, status=status,
         )
+        if peek is not None:
+            del self._partial_fills[peek[0]]
+        return receipt
 
     def _execute_taker_limit(
         self, symbol: str, rule: SymbolRulesFx, side: str, qty: Decimal | None, price: Decimal | None
@@ -499,10 +503,29 @@ class MockExchangeEnv(ExchangeEnv):
                 raise InvariantViolation(f"{asset} 有挂单冻结 {expected} 但无余额条目")
 
 
+def _parse_time_bound(raw: str, *, is_end: bool) -> datetime:
+    try:
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ExchangeError("INVALID_ORDER", f"时间参数不是合法 ISO-8601: {raw!r}") from exc
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    if is_end and len(raw) == 10:  # 日期简写作为 end：包含当日整天
+        parsed += timedelta(days=1) - timedelta(microseconds=1)
+    return parsed
+
+
 def _filter_window(rows: list, start: str | None, end: str | None) -> list:
-    """ISO-8601 UTC 字符串按字典序过滤 [start, end]（含端点）。"""
+    """按 [start, end]（含端点）过滤。统一规范化为 aware datetime 再比较——
+    同一时刻的 Z / +00:00 / 日期简写写法必须得到一致结果（模型输入宽容性）。"""
+
+    def ts(row) -> datetime:
+        return datetime.fromisoformat(row.timestamp.replace("Z", "+00:00"))
+
     if start is not None:
-        rows = [r for r in rows if r.timestamp >= start]
+        bound = _parse_time_bound(start, is_end=False)
+        rows = [r for r in rows if ts(r) >= bound]
     if end is not None:
-        rows = [r for r in rows if r.timestamp <= end]
+        bound = _parse_time_bound(end, is_end=True)
+        rows = [r for r in rows if ts(r) <= bound]
     return rows

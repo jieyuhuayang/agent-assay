@@ -31,7 +31,7 @@ def test_scripted_a01_full_episode():
                 "tool": "place_order",
                 "arguments": {
                     "symbol": "BTCUSDT", "side": "buy", "type": "limit",
-                    "qty": "0.02", "price": "63400",
+                    "qty": "0.015", "price": "63400",
                 },
             },
             {"tool": "report", "arguments": {"text": "已挂单", "status": "done"}},
@@ -49,11 +49,11 @@ def test_scripted_a01_full_episode():
         "get_trading_rules", "place_order", "report",
     ]
     new_orders = [
-        o for o in result.final_state["open_orders"] if o["qty"] == "0.02"
+        o for o in result.final_state["open_orders"] if o["qty"] == "0.015"
     ]
     assert new_orders and new_orders[0]["price"] == "63400"
-    # 冻结守恒：640(fixture) + 0.02*63400 = 1908
-    assert Decimal(result.final_state["balances"]["USDT"]["locked"]) == Decimal("1908")
+    # 冻结守恒：640(fixture) + 0.015*63400 = 1591
+    assert Decimal(result.final_state["balances"]["USDT"]["locked"]) == Decimal("1591")
 
 
 def test_result_json_fingerprint_complete(tmp_path):

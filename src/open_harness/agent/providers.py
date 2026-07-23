@@ -93,19 +93,27 @@ class LiteLLMProvider(Provider):
         except Exception as exc:  # noqa: BLE001 —— 各家 SDK 异常类型繁杂，统一转 ProviderError
             raise ProviderError(f"litellm completion failed: {exc}") from exc
 
-        if getattr(response, "model", None):
-            self.model_version = response.model
-        message = response.choices[0].message
-        tool_calls: list[ToolCallRequest] = []
-        for call in message.tool_calls or []:
-            raw = call.function.arguments or "{}"
-            try:
-                parsed = json.loads(raw)
-                tool_calls.append(
-                    ToolCallRequest(id=call.id, name=call.function.name, arguments=parsed)
-                )
-            except json.JSONDecodeError:
-                tool_calls.append(
-                    ToolCallRequest(id=call.id, name=call.function.name, arguments_raw=raw)
-                )
-        return ModelResponse(text=message.content, tool_calls=tool_calls)
+        try:
+            if getattr(response, "model", None):
+                self.model_version = response.model
+            message = response.choices[0].message
+            tool_calls: list[ToolCallRequest] = []
+            for call in message.tool_calls or []:
+                raw = call.function.arguments or "{}"
+                try:
+                    parsed = json.loads(raw)
+                except json.JSONDecodeError:
+                    parsed = None
+                if isinstance(parsed, dict):
+                    tool_calls.append(
+                        ToolCallRequest(id=call.id, name=call.function.name, arguments=parsed)
+                    )
+                else:
+                    # 非法 JSON 或非 object（数组/字符串/null）→ 原文保留，
+                    # runner 记 schema_error 回喂模型自我修正
+                    tool_calls.append(
+                        ToolCallRequest(id=call.id, name=call.function.name, arguments_raw=raw)
+                    )
+            return ModelResponse(text=message.content, tool_calls=tool_calls)
+        except Exception as exc:  # noqa: BLE001 —— 畸形响应与网络失败同权：交给 D8 重试/infra_error
+            raise ProviderError(f"malformed litellm response: {exc}") from exc

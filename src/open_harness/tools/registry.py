@@ -15,7 +15,7 @@ from typing import Any, Callable, Literal
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from ..env.base import ExchangeEnv, ExchangeError
+from ..env.base import ExchangeEnv, ExchangeError, InvariantViolation
 from ..money import Money
 
 
@@ -337,6 +337,18 @@ def execute_tool(name: str, arguments: dict[str, Any] | None, ctx: ToolContext) 
             error_code=exc.code,
             error_kind="semantic_error",
             error_message=exc.message,
+            irreversible=irreversible,
+        )
+    except InvariantViolation:
+        raise  # harness 自身账本损坏：必须炸出来，吞掉会掩盖真 bug
+    except Exception as exc:  # noqa: BLE001 —— 兑现「不抛异常」契约的最后兜底
+        return ToolInvocation(
+            tool=name,
+            arguments=arguments,
+            ok=False,
+            error_code="INTERNAL_ERROR",
+            error_kind=None,  # 非模型过错：不计入 schema/semantic 错误指标（FP08）
+            error_message=f"{type(exc).__name__}: {exc}",
             irreversible=irreversible,
         )
     return ToolInvocation(

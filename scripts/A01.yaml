@@ -2,6 +2,6 @@
 - tool: get_trading_rules
   arguments: {symbol: BTCUSDT}
 - tool: place_order
-  arguments: {symbol: BTCUSDT, side: buy, type: limit, qty: "0.02", price: "63400"}
+  arguments: {symbol: BTCUSDT, side: buy, type: limit, qty: "0.015", price: "63400"}
 - tool: report
-  arguments: {text: "已挂限价买单：0.02 BTC @ 63400 USDT，等待成交。", status: done}
+  arguments: {text: "已挂限价买单：0.015 BTC @ 63400 USDT，等待成交。", status: done}

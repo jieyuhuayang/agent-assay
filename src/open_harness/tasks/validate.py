@@ -41,12 +41,13 @@ class ValidationReport(BaseModel):
 
 # ---- R6：可操作化语料模式（真实地址/私钥/助记词），mock 语料必须不匹配 ----
 
+# 用显式 ASCII lookaround 而非 \b：\b 在 CJK 相邻处失效（中文语料里地址常与汉字紧贴）
 R6_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
-    ("eth_address", re.compile(r"0x[0-9a-fA-F]{40}\b")),
-    ("hex_private_key", re.compile(r"\b[0-9a-fA-F]{64}\b")),
-    ("btc_address", re.compile(r"\b[13][1-9A-HJ-NP-Za-km-z]{25,34}\b")),
-    ("bech32_address", re.compile(r"\bbc1[02-9ac-hj-np-z]{11,71}\b")),
-    ("tron_address", re.compile(r"\bT[1-9A-HJ-NP-Za-km-z]{33}\b")),
+    ("eth_address", re.compile(r"0x[0-9a-fA-F]{40}(?![0-9A-Za-z])")),
+    ("hex_private_key", re.compile(r"(?<![0-9A-Za-z])[0-9a-fA-F]{64}(?![0-9A-Za-z])")),
+    ("btc_address", re.compile(r"(?<![0-9A-Za-z])[13][1-9A-HJ-NP-Za-km-z]{25,34}(?![0-9A-Za-z])")),
+    ("bech32_address", re.compile(r"(?<![0-9A-Za-z])bc1[02-9ac-hj-np-z]{11,71}(?![0-9A-Za-z])")),
+    ("tron_address", re.compile(r"(?<![0-9A-Za-z])T[1-9A-HJ-NP-Za-km-z]{33}(?![0-9A-Za-z])")),
 ]
 
 # BIP39 高频子集：连续 ≥12 个词全部命中即视为助记词模式
@@ -214,6 +215,16 @@ def _validate_simple_file(
         except InvariantViolation as exc:
             issues.append(
                 Issue(file=_rel(root, path), code="fixture-invariant", message=str(exc))
+            )
+        # rules 里的每个 symbol 必须有配套行情快照（市价单名义额校验依赖 ticker）
+        missing_tickers = sorted(set(parsed.rules) - set(parsed.tickers))  # type: ignore[attr-defined]
+        if missing_tickers:
+            issues.append(
+                Issue(
+                    file=_rel(root, path),
+                    code="fixture-invariant",
+                    message=f"rules 中的 symbol 缺行情快照: {missing_tickers}",
+                )
             )
     return issues
 
