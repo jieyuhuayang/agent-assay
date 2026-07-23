@@ -133,12 +133,12 @@ schema 层校验（类型/枚举/必填 → `schema_error`）与语义层校验�
 R8 的评分器侧保证由 FP07 的 `test_r8_confirm_assertion_reads_only_tool_metadata` 承担（M2 勾选）；
 FP04 只负责在元数据中定义不可逆判定接口，由 AC-04d 验收。
 
-- [ ] AC-04a 12 工具全部注册且参数签名与 KICKOFF 第 5 节表一致 → `tests/test_registry.py::test_twelve_tools_signatures`
-- [ ] AC-04b schema 层校验失败返回工具错误并记 `schema_error` → `tests/test_registry.py::test_schema_error_recorded`
-- [ ] AC-04c 语义层错误返回交易所风格错误码且记入轨迹（LOT_SIZE / 不存在 symbol / 假 order_id）→ `tests/test_registry.py::test_semantic_error_exchange_codes`
-- [ ] AC-04d 不可逆性动态判定：market=true，limit/stop_limit=false，withdraw=true → `tests/test_registry.py::test_irreversible_metadata_dynamic`
-- [ ] AC-04e R7 结构保证：src/ 中 registry 之外不存在第二份工具 schema 定义 → `tests/test_redlines.py::test_r7_no_tool_schema_outside_registry`
-- [ ] AC-04f D3 守护：registry 不含任何 mandate 维度校验，「合法格式但违反 mandate」的调用（超限下单 / 白名单外资产 / 非白名单地址提币）照常执行并返回正常回执 → `tests/test_registry.py::test_no_mandate_enforcement_in_tool_layer`
+- [x] AC-04a 12 工具全部注册且参数签名与 KICKOFF 第 5 节表一致 → `tests/test_registry.py::test_twelve_tools_signatures`
+- [x] AC-04b schema 层校验失败返回工具错误并记 `schema_error` → `tests/test_registry.py::test_schema_error_recorded`
+- [x] AC-04c 语义层错误返回交易所风格错误码且记入轨迹（LOT_SIZE / 不存在 symbol / 假 order_id）→ `tests/test_registry.py::test_semantic_error_exchange_codes`
+- [x] AC-04d 不可逆性动态判定：market=true，limit/stop_limit=false，withdraw=true → `tests/test_registry.py::test_irreversible_metadata_dynamic`
+- [x] AC-04e R7 结构保证：src/ 中 registry 之外不存在第二份工具 schema 定义 → `tests/test_redlines.py::test_r7_no_tool_schema_outside_registry`
+- [x] AC-04f D3 守护：registry 不含任何 mandate 维度校验，「合法格式但违反 mandate」的调用（超限下单 / 白名单外资产 / 非白名单地址提币）照常执行并返回正常回执 → `tests/test_registry.py::test_no_mandate_enforcement_in_tool_layer`
 
 ### FP05 · Runner、Provider 与用户模拟器（M1）
 
@@ -370,7 +370,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 - [x] FP01 · 项目脚手架与领域模型（2026-07-23，10 tests green）
 - [x] FP02 · 任务加载与 `oh validate`（2026-07-23，19 tests green）
 - [x] FP03 · Mock 交易所环境（2026-07-23，32 tests green）
-- [ ] FP04 · 工具注册表
+- [x] FP04 · 工具注册表（2026-07-23，39 tests green）
 - [ ] FP05 · Runner、Provider 与用户模拟器
 - [ ] FP06 · A 族任务集与 M1 端到端 —— **M1 完成线**
 - [ ] FP07 · 断言引擎
