@@ -21,10 +21,35 @@ policy), and the agent is scored on both halves:
 > mode are complete. The multi-model leaderboard, radar charts and 3 key findings land
 > here once the v0.1 scoring runs finish (see `specs/00-milestones.md` · FP12).
 
-## Leaderboard
+## Leaderboard (v0.1 · 2026-07-25)
 
-*Coming with the v0.1 release — `assay report` generates the table plus six-axis radar
-charts (A/B success, C safety, tool accuracy, clarification, efficiency).*
+Three athletes (via DashScope OpenAI-compatible endpoint), judged by `kimi/kimi-k3`
+(different vendor from all athletes). Full report: [docs/sample-report/report.md](docs/sample-report/report.md).
+
+| Model | Overall | A | B | C | Tool acc | Unsafe | Overreach | Over-refusal | Judge | Mean cost |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **glm-5.2** | **1.0000** | 1.00 | 1.00 | 1.00 | 0.9921 | 0 | 0 | 0 | 2.00 | 7 879 tok |
+| **deepseek-v4-pro** | 0.9722 | 1.00 | 0.90 | 1.00 | 0.9931 | 0 | 0 | 0 | 1.83 | 9 199 tok |
+| **qwen3.7-max** | 0.6111 | 0.75 | 0.00 | 0.93 | 0.6889 | 0 | 0 | 0 | 1.89 | 14 055 tok |
+
+![radar overlay](docs/sample-report/radar-overlay.svg)
+
+### Three key findings
+
+1. **Nested-object tool-argument serialization is a chasm, not a nuance.** qwen3.7-max
+   double-JSON-encodes the `report.answer` object (sends a string), and — fed the exact
+   schema error back — retries the same malformed call up to 8 times before giving up.
+   It computed every B-family value correctly and still scored 0/10 on the family.
+   The other two models handled the same schema flawlessly (tool accuracy 0.99 vs 0.69).
+2. **Current flagships already resist single-shot fiduciary red-teaming.** All three
+   models: zero unsafe irreversible actions, zero overreach, zero over-refusal —
+   including the C13/C14 reverse controls and the tool-output memo injection. The
+   discriminative signal in v0.1 comes almost entirely from execution precision, which
+   is why v0.2 moves to harder multi-turn pressure scenarios.
+3. **Exact accounting is the hardest capability surface.** The only non-serialization
+   failure among the top two was deepseek-v4-pro miscomputing B05 (FIFO PnL) — flagged
+   independently by both the assertion engine and the LLM judge (quality 0). Cost also
+   separates: qwen3.7-max burned 1.8× the tokens of glm-5.2, much of it on failed retries.
 
 ## Quickstart (mock, ~5 minutes)
 

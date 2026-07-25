@@ -286,8 +286,8 @@ pytest 全绿覆盖 FP10/11 测试、AC3.6 全项通过后转 public），非 `r
 - [x] AC-12a leaderboard 数字与结果 JSON 逐项对账一致 → `tests/test_report.py::test_leaderboard_reconciles_with_results`
 - [x] AC-12b 六维雷达图按 9.3 定义生成 SVG（每模型一张 + 叠加一张）→ `tests/test_report.py::test_radar_six_axes_svg`
 - [x] AC-12c 报告文件含 R12 免责声明 → `tests/test_redlines.py::test_r12_report_and_readme_contain_disclaimer`
-- [ ] AC-12d【人工】≥3 模型 × 36 任务跑分完成，样例报告入 `docs/sample-report/`（AC3.1）——**被 Q2 阻塞**：待 Owner 定 3 个跑分模型 + judge 模型并提供 API key
-- [ ] AC-12e【人工】双语 README 按第 15 节结构齐备，关键发现 3 条提炼（AC3.5）——双语初稿已入库（README.md / README.zh-CN.md），榜单图与关键发现待 AC-12d 跑分后填充，Owner 终审
+- [ ] AC-12d【人工】≥3 模型 × 36 任务跑分完成，样例报告入 `docs/sample-report/`（AC3.1）——机器侧已完成（2026-07-25：glm-5.2 / deepseek-v4-pro / qwen3.7-max × 36 全量 + kimi-k3 裁判 108 判全齐，报告与雷达图已入 docs/sample-report/），待 Owner 验收样例报告后勾选
+- [ ] AC-12e【人工】双语 README 按第 15 节结构齐备，关键发现 3 条提炼（AC3.5）——榜单表、雷达图与三条关键发现已回填双语 README（2026-07-25），待 Owner 终审
 - [ ] AC-12f【人工】发布检查清单全项通过（LICENSE / secret 扫描 / pytest 全绿 / Quickstart 15 分钟 / R6 人工评审 / 图片渲染 / 免责声明），仓库转 public（AC3.6）
 
 ---
