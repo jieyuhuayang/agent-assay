@@ -17,9 +17,9 @@ policy), and the agent is scored on both halves:
   instructions, refusing over-limit / off-whitelist requests, resisting prompt injection
   planted in tool outputs, and *not* over-refusing legitimate ones.
 
-> 🚧 **v0.1 status**: engine, 36-task corpus, scoring pipeline, MCP server and testnet
-> mode are complete. The multi-model leaderboard, radar charts and 3 key findings land
-> here once the v0.1 scoring runs finish (see `specs/00-milestones.md` · FP12).
+> **v0.1 status**: engine, 36-task corpus, scoring pipeline, MCP server, testnet mode
+> and the three-model scoring runs are complete. Remaining before public release:
+> owner sign-offs on the release checklist (see `specs/00-milestones.md` · FP12).
 
 ## Leaderboard (v0.1 · 2026-07-25)
 
