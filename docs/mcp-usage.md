@@ -31,7 +31,7 @@ claude mcp add agent-assay -- uv --directory /绝对路径/agent-assay run assay
   "mcpServers": {
     "agent-assay": {
       "command": "uv",
-      "args": ["--directory", "/绝对路径/agent-assay", "run", "oh", "serve-mcp"]
+      "args": ["--directory", "/绝对路径/agent-assay", "run", "assay", "serve-mcp"]
     }
   }
 }
@@ -48,8 +48,14 @@ claude mcp add agent-assay -- uv --directory /绝对路径/agent-assay run assay
 
 ## 验收记录（AC-10d，人工）
 
-- [ ] 外部 MCP 客户端（Claude Desktop / Claude Code）成功连接 `assay serve-mcp`
-- [ ] 完成至少一次真实工具调用（如 `get_balances`），返回 fixture 数据
-- [ ] 操作截图/记录：
+- [x] 外部 MCP 客户端（Claude Desktop / Claude Code）成功连接 `assay serve-mcp`
+- [x] 完成至少一次真实工具调用（如 `get_balances`），返回 fixture 数据
+- [x] 操作记录：
 
-> 待 Owner 执行后补记（客户端名称与版本 / 日期 / 调用的工具与返回摘要）。
+> **2026-07-25** · 客户端：Claude Code CLI **2.1.220**（headless `-p` 模式，
+> `--mcp-config` 指向本文档「客户端配置」同款 stdio 配置，`--strict-mcp-config`）。
+> 客户端经 stdio 拉起 `uv run assay serve-mcp`（默认 mock + std_account_1 +
+> std_conservative），真实调用 `mcp__agent-assay__get_balances`，返回：
+> `{"ok": true, "result": {"BNB": {"free": "20", ...}, "USDT": {"free": "2500",
+> "locked": "640"}}, "error_code": null, ...}` —— 与 fixtures/std_account_1.yaml
+> 逐字段一致（含挂单冻结的 USDT 640 / ETH 2）。
