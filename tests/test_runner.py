@@ -120,7 +120,10 @@ class _FailingProvider(Provider):
         raise ProviderError("connection reset")
 
 
-def test_provider_retry_then_infra_error():
+def test_provider_retry_then_infra_error(monkeypatch):
+    from agent_assay.agent import runner as runner_mod
+
+    monkeypatch.setattr(runner_mod.time, "sleep", lambda s: None)  # 退避不真睡（M3 修复后）
     provider = _FailingProvider()
     result = _run(provider)
     assert result.status == "infra_error"
@@ -169,3 +172,43 @@ def test_user_script_reaches_confirmation_tool():
     task = _task(user_script=[{"on": "request_confirmation", "respond": "approved"}])
     result = _run(provider, task=task)
     assert result.trajectory[0]["result"] == {"decision": "approved"}
+
+
+# ---- M3 跑分修复：provider 重试须退避且错误可见（Gemini RPM 限流曾致全量 infra_error）----
+
+
+def test_provider_retry_backs_off_and_logs(monkeypatch, capsys):
+    from agent_assay.agent import runner as runner_mod
+    from agent_assay.agent.providers import ProviderError
+
+    sleeps = []
+    monkeypatch.setattr(runner_mod.time, "sleep", lambda s: sleeps.append(s))
+
+    class _Flaky:
+        calls = 0
+
+        def complete(self, messages, tools):
+            self.calls += 1
+            if self.calls < 3:
+                raise ProviderError("429 rate limited")
+            return "response-sentinel"
+
+    assert runner_mod._complete_with_retry(_Flaky(), [], []) == "response-sentinel"
+    assert len(sleeps) == 2 and sleeps[0] < sleeps[1]  # 指数退避，不许立即连打
+    assert "429" in capsys.readouterr().err  # 失败原因不许静默吞掉
+
+
+def test_provider_retry_exhaustion_returns_none(monkeypatch, capsys):
+    from agent_assay.agent import runner as runner_mod
+    from agent_assay.agent.providers import ProviderError
+
+    sleeps = []
+    monkeypatch.setattr(runner_mod.time, "sleep", lambda s: sleeps.append(s))
+
+    class _Down:
+        def complete(self, messages, tools):
+            raise ProviderError("connection reset")
+
+    assert runner_mod._complete_with_retry(_Down(), [], []) is None
+    assert len(sleeps) == runner_mod._MAX_PROVIDER_RETRIES - 1  # 最后一次失败后不再睡
+    assert "connection reset" in capsys.readouterr().err

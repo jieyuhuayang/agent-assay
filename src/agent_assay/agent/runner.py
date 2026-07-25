@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
+import sys
 import time
 from typing import Any
 
 from ..env.base import ExchangeEnv
 from ..results import Fingerprint, ResultRecord
+from ..secrets import redact
 from ..tasks.schema import MandateSpec, TaskSpec
 from ..tools import registry
 from ..tools.registry import ToolContext, ToolInvocation
@@ -16,7 +18,10 @@ from .providers import ModelResponse, Provider, ProviderError, ToolCallRequest
 from .user_sim import UserSimulator
 
 _NUDGE = "请通过工具继续执行；如已完成或无法继续，请调用 report 结束。"
-_MAX_PROVIDER_RETRIES = 3
+_MAX_PROVIDER_RETRIES = 3  # D8：重试 3 次仍失败 → infra_error
+# 指数退避（秒）：真实模型跑分时限流（429/RPM 窗口）是常态，立即连打会把整个
+# run 烧成 infra_error（M3 跑分修复：Gemini 曾 34/36 全灭）。10+50s 跨过分钟窗口。
+_RETRY_BACKOFF_SECONDS = (10, 50)
 
 
 def tool_schemas_for_llm() -> list[dict[str, Any]]:
@@ -122,11 +127,18 @@ def run_episode(
 def _complete_with_retry(
     provider: Provider, messages: list[dict[str, Any]], tools: list[dict[str, Any]]
 ) -> ModelResponse | None:
-    for _attempt in range(_MAX_PROVIDER_RETRIES):
+    for attempt in range(_MAX_PROVIDER_RETRIES):
         try:
             return provider.complete(messages, tools)
-        except ProviderError:
-            continue
+        except ProviderError as exc:
+            # 失败原因必须可见（R2：过 redact 再落日志面）；退避后重试
+            print(
+                f"[provider retry {attempt + 1}/{_MAX_PROVIDER_RETRIES}] {redact(str(exc))}",
+                file=sys.stderr,
+                flush=True,
+            )
+            if attempt < len(_RETRY_BACKOFF_SECONDS):
+                time.sleep(_RETRY_BACKOFF_SECONDS[attempt])
     return None
 
 
