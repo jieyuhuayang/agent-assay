@@ -203,7 +203,7 @@ scripted provider 跑通全生命周期（AC1.4）、≥1 真实模型端到端�
 - [x] AC-06b scripted provider 跑通 A01 全生命周期（加载→环境→循环→终止→落盘）→ `tests/test_e2e.py::test_scripted_a01_full_episode`
 - [x] AC-06c 结果 JSON 含全部指纹字段且通过 ResultRecord 校验 → `tests/test_e2e.py::test_result_json_fingerprint_complete`
 - [x] AC-06d `assay run --task` / `--family` 过滤行为正确 → `tests/test_cli.py::test_run_task_and_family_filters`
-- [ ] AC-06e【integration】≥1 真实模型（litellm）在 mock 上跑完 A 族 12 任务并落盘 → `tests/test_e2e.py::test_real_model_a_family_smoke`（无 key 时 skip；正式验收由 Owner 跑一次记录 run_id）
+- [x] AC-06e【integration】≥1 真实模型（litellm）在 mock 上跑完 A 族 12 任务并落盘 → `tests/test_e2e.py::test_real_model_a_family_smoke`（2026-07-25 以 openai/glm-5.2（DashScope）实跑通过，1 passed in 288s；另有三模型全量 run 落盘 results/）
 
 ### FP07 · 断言引擎（M2）
 
@@ -407,7 +407,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 - [x] FP03 · Mock 交易所环境（2026-07-23，32 tests green）
 - [x] FP04 · 工具注册表（2026-07-23，39 tests green）
 - [x] FP05 · Runner、Provider 与用户模拟器（2026-07-23，51 tests green）
-- [x] FP06 · A 族任务集与 M1 端到端（2026-07-23，55 tests green；AC-06e 待 Owner 提供模型 key 后跑真实模型）—— **M1 完成线**
+- [x] FP06 · A 族任务集与 M1 端到端（2026-07-23，55 tests green；AC-06e 于 2026-07-25 真实模型实跑通过）—— **M1 完成线**
 - [x] FP07 · 断言引擎（2026-07-23，80 tests green；审查修复 F1–F6 后 87）
 - [x] FP08 · Judge、指标与评分流水线（2026-07-23，105 tests green）
 - [x] FP09 · B/C 族任务集（2026-07-23，112 tests green；AC-09c Owner 签核 2026-07-24）—— **M2 完成线**
