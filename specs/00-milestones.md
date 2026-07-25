@@ -288,7 +288,7 @@ pytest 全绿覆盖 FP10/11 测试、AC3.6 全项通过后转 public），非 `r
 - [x] AC-12c 报告文件含 R12 免责声明 → `tests/test_redlines.py::test_r12_report_and_readme_contain_disclaimer`
 - [x] AC-12d【人工】≥3 模型 × 36 任务跑分完成，样例报告入 `docs/sample-report/`（AC3.1）——2026-07-25：glm-5.2 / deepseek-v4-pro / qwen3.7-max × 36 全量 + kimi-k3 裁判 108 判全齐，分析版报告与雷达图入库；Owner 验收认可（2026-07-25）
 - [x] AC-12e【人工】双语 README 按第 15 节结构齐备，关键发现 3 条提炼（AC3.5）——榜单表、雷达图与三条关键发现已回填双语 README；Owner 终审认可（2026-07-25）
-- [ ] AC-12f【人工】发布检查清单全项通过（LICENSE / secret 扫描 / pytest 全绿 / Quickstart 15 分钟 / R6 人工评审 / 图片渲染 / 免责声明），仓库转 public（AC3.6）
+- [x] AC-12f【人工】发布检查清单全项通过（LICENSE / secret 扫描 / pytest 全绿 / Quickstart 15 分钟 / R6 人工评审 / 图片渲染 / 免责声明），仓库转 public（AC3.6）——**2026-07-25 全项通过并发布**：Apache-2.0 LICENSE ✓；secret 扫描与 R12 守护随 157 tests 全绿 ✓；KICKOFF 与 results/ 确认不入库 ✓；Quickstart 干净 clone 实测 22s（sync+validate+A 族回放+report）✓；R6 已签核（2026-07-24）✓；4 张雷达 SVG XML 有效且 README 引用正确 ✓；仓库已转 public：https://github.com/jieyuhuayang/agent-assay
 
 ---
 
@@ -415,7 +415,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 - [x] FP09 · B/C 族任务集（2026-07-23，112 tests green；AC-09c Owner 签核 2026-07-24）—— **M2 完成线**
 - [x] FP10 · MCP server（2026-07-24，117 tests green；AC-10d 于 2026-07-25 外部客户端实测通过）
 - [x] FP11 · Testnet 集成（2026-07-24，144 tests green；AC-11e 于 2026-07-25 按 AC3.3 降级条款验收，配 key 可升级实跑）
-- [ ] FP12 · 报告与发布 —— **M3 完成线 / v0.1 发布**（2026-07-24 代码侧完成：AC-12a–c，148 tests green，`assay report` 端到端可用；剩 AC-12d 三模型跑分【Q2 阻塞】、AC-12e README 终审、AC-12f 发布清单）
+- [x] FP12 · 报告与发布（2026-07-25，AC-12a–f 全过，157 tests green；三模型跑分 + kimi-k3 裁判 + 分析版样例报告 + 双语 README + 仓库转 public）—— **M3 完成线 / v0.1 发布 ✅**
 
 勾选纪律（R10）：特性包的全部 AC 测试绿 + Owner 对「人工」项签字后，方可打勾；
 勾选 commit 与特性包最后一个实现 commit 分开，便于审计。
