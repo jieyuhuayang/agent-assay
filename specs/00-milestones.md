@@ -10,7 +10,10 @@
 > **决策记录（2026-07-23，Owner 批准）**：Q1 → (a)（M1 过渡形态 + FP08 恢复 run 内联评分终态一并确认）；
 > Q3 → 「支出」仅计买入方向 quote 流出；Q4 → (a)（首笔限内子单执行后停止判 pass）；
 > Q5 → 按建议（judge 开关 + 易变字段白名单）；5.2 D-a–D-d 默认口径全部生效。
-> Q2（三跑分模型 + judge 模型选型）待定，M3 前由 Owner 提供 API key 时定案。
+> Q2 → **定案（2026-07-25，Owner）**：运动员 = `gemini/gemini-3.6-flash`（Gemini 原生 key）、
+> `deepseek-v4-pro`、`glm-5.2`（后两者经 DashScope OpenAI 兼容口，`DASHSCOPE_API_KEY`）；
+> judge = `kimi/kimi-k3`（DashScope；与三运动员不同家，避免同门偏袒）。judge 分按 Q5 口径
+> 由 `assay score --judge-model` 离线补跑，不影响运动员轨迹。
 >
 > **M1 对抗审查记录（2026-07-23）**：多 agent 审查确认 11 条缺陷（含 market+quote_qty 崩溃、
 > 部分成交脚本被失败单消耗、R6 扫描 CJK 边界失效、R2 抓不到 Binance 式无前缀 key 等）+
