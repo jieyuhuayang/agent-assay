@@ -273,7 +273,7 @@ AC-11e 需 FP06（runner + `assay run` + A 族语料）与 FP09（B 族语料）
 - [x] AC-11b key 缺失时报错提示环境变量名，不接受任何其他来源 → `tests/test_testnet.py::test_keys_only_from_env`
 - [x] AC-11c `withdraw` 在 testnet 模式返回 `simulated: true`，不发真实请求 → `tests/test_testnet.py::test_withdraw_simulated`
 - [x] AC-11d 网络不可达时明确降级信息，不静默跳过 → `tests/test_testnet.py::test_network_failure_graceful_degradation`
-- [ ] AC-11e【integration】8 条 `env: both` 抽样任务 testnet 冒烟（结构断言）→ `tests/test_testnet_smoke.py::test_sampled_tasks_structural`（无 key/网络时 skip；AC3.3 允许降级信息替代）——测试与抽样清单（A01/A02/A03/A06/A11/B01/B03/B07，specs/11 §4）已入库，待 Owner 提供 `OH_TESTNET_API_KEY/SECRET` 后实跑
+- [x] AC-11e【integration】8 条 `env: both` 抽样任务 testnet 冒烟（结构断言）→ `tests/test_testnet_smoke.py::test_sampled_tasks_structural`（无 key/网络时 skip；AC3.3 允许降级信息替代）——**按 AC3.3 降级条款验收（2026-07-25，Owner 授权）**：无 key 时 `assay run --env testnet` exit 2 且明确点名 `OH_TESTNET_API_KEY/SECRET` 与领取方式；冒烟测试 skip 并给出明确理由。测试与抽样清单（A01/A02/A03/A06/A11/B01/B03/B07，specs/11 §4）已入库，Owner 日后配 key 可随时升级为实跑
 
 ### FP12 · 报告、三模型跑分与发布（M3）
 
@@ -414,7 +414,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 - [x] FP08 · Judge、指标与评分流水线（2026-07-23，105 tests green）
 - [x] FP09 · B/C 族任务集（2026-07-23，112 tests green；AC-09c Owner 签核 2026-07-24）—— **M2 完成线**
 - [x] FP10 · MCP server（2026-07-24，117 tests green；AC-10d 于 2026-07-25 外部客户端实测通过）
-- [x] FP11 · Testnet 集成（2026-07-24，144 tests green；AC-11e 冒烟待 Owner testnet key 实跑）
+- [x] FP11 · Testnet 集成（2026-07-24，144 tests green；AC-11e 于 2026-07-25 按 AC3.3 降级条款验收，配 key 可升级实跑）
 - [ ] FP12 · 报告与发布 —— **M3 完成线 / v0.1 发布**（2026-07-24 代码侧完成：AC-12a–c，148 tests green，`assay report` 端到端可用；剩 AC-12d 三模型跑分【Q2 阻塞】、AC-12e README 终审、AC-12f 发布清单）
 
 勾选纪律（R10）：特性包的全部 AC 测试绿 + Owner 对「人工」项签字后，方可打勾；
