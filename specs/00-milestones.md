@@ -496,15 +496,15 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 
 ### FP14 · 工具 profile + x402 prompt + 接线（specs/14-x402-tools.md）
 
-- [ ] AC-14a 4 个 x402 工具注册，签名/类别正确 → `tests/test_registry.py::test_x402_tools_signatures`
-- [ ] AC-14b R4 守护：`all_tools()` 缺省仍返回原 12 工具原顺序 → `tests/test_registry.py::test_all_tools_default_exchange_unchanged`（既有 test_twelve_tools_signatures 零改动保持绿）
-- [ ] AC-14c profile 过滤：x402=7（含共享 3），全集 16 → `tests/test_registry.py::test_profile_filtering`
-- [ ] AC-14d x402_pay 恒不可逆（R8 元数据）、category=trading → `tests/test_registry.py::test_x402_pay_irreversible_metadata`
-- [ ] AC-14e D3：越限/非白名单 x402_pay 经 registry 照常执行 → `tests/test_registry.py::test_no_mandate_enforcement_x402_tools`
-- [ ] AC-14f runner 按 mandate.kind 取工具 profile → `tests/test_runner.py::test_tool_profile_follows_mandate_kind`
-- [ ] AC-14g x402 模板渲染 mandate；交易所模板字节冻结 pin → `tests/test_prompt.py::test_x402_mandate_template`、`::test_exchange_prompt_byte_frozen`
-- [ ] AC-14h serve-mcp x402 mandate → 7 工具 + x402 instructions；R7 奇偶校验参数化双 profile → `tests/test_mcp_server.py::test_serve_mcp_x402_profile`、`tests/test_redlines.py::test_r7_mcp_schemas_match_registry`
-- [ ] AC-14i cli env 按 fixture.kind 分派；fixture/mandate kind 不一致 exit 2 → `tests/test_cli.py::test_run_x402_env_dispatch`
+- [x] AC-14a 4 个 x402 工具注册，签名/类别正确 → `tests/test_registry.py::test_x402_tools_signatures`
+- [x] AC-14b R4 守护：`all_tools()` 缺省仍返回原 12 工具原顺序 → `tests/test_registry.py::test_all_tools_default_exchange_unchanged`（既有 test_twelve_tools_signatures 零改动保持绿）
+- [x] AC-14c profile 过滤：x402=7（含共享 3），全集 16 → `tests/test_registry.py::test_profile_filtering`
+- [x] AC-14d x402_pay 恒不可逆（R8 元数据）、category=trading → `tests/test_registry.py::test_x402_pay_irreversible_metadata`
+- [x] AC-14e D3：越限/非白名单 x402_pay 经 registry 照常执行 → `tests/test_registry.py::test_no_mandate_enforcement_x402_tools`
+- [x] AC-14f runner 按 mandate.kind 取工具 profile → `tests/test_runner.py::test_tool_profile_follows_mandate_kind`
+- [x] AC-14g x402 模板渲染 mandate；交易所模板字节冻结 pin → `tests/test_prompt.py::test_x402_mandate_template`、`::test_exchange_prompt_byte_frozen`
+- [x] AC-14h serve-mcp x402 mandate → 7 工具 + x402 instructions；R7 奇偶校验参数化双 profile → `tests/test_mcp_server.py::test_serve_mcp_x402_profile`、`tests/test_redlines.py::test_r7_mcp_schemas_match_registry`
+- [x] AC-14i cli env 按 fixture.kind 分派；fixture/mandate kind 不一致 exit 2 → `tests/test_cli.py::test_run_x402_env_dispatch`
 
 ### FP15 · 断言/overreach/报告接入（specs/15-x402-scoring.md）
 
@@ -531,6 +531,6 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 ## M4.4 进度勾选
 
 - [x] FP13 · x402 领域模型 + mock 支付环境（2026-07-26，171 tests green）
-- [ ] FP14 · 工具 profile + x402 prompt + 接线
+- [x] FP14 · 工具 profile + x402 prompt + 接线（2026-07-26，182 tests green）
 - [ ] FP15 · 断言/overreach/报告七轴接入
 - [ ] FP16 · X 族语料 + 跑分 + v0.2 发布 —— **M4 完成线 / v0.2 发布**
