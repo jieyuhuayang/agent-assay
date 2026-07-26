@@ -41,12 +41,29 @@ def load_task(path: Path) -> TaskSpec:
     return TaskSpec.model_validate(load_yaml(path))
 
 
-def load_mandate(path: Path) -> MandateSpec:
+def _kind_of(data: object, path: Path) -> str:
+    """顶层 kind 判别（specs/13 D-o）：缺省 exchange（旧 YAML 零翻新），未知即报错。"""
+    kind = data.get("kind", "exchange") if isinstance(data, dict) else "exchange"
+    if kind not in ("exchange", "x402"):
+        raise ValueError(f"{path}: 未知 kind: {kind!r}（支持 exchange | x402）")
+    return kind
+
+
+def load_mandate(path: Path) -> "AnyMandate":
     data = load_yaml(path)
     if isinstance(data, dict) and set(data) == {"mandate"}:
         data = data["mandate"]
+    if _kind_of(data, path) == "x402":
+        from .schema import X402MandateSpec
+
+        return X402MandateSpec.model_validate(data)
     return MandateSpec.model_validate(data)
 
 
-def load_fixture(path: Path) -> FixtureSpec:
-    return FixtureSpec.model_validate(load_yaml(path))
+def load_fixture(path: Path) -> "FixtureSpec | X402FixtureSpec":
+    data = load_yaml(path)
+    if _kind_of(data, path) == "x402":
+        from ..env.x402_fixture import X402FixtureSpec
+
+        return X402FixtureSpec.model_validate(data)
+    return FixtureSpec.model_validate(data)

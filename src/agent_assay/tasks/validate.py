@@ -202,8 +202,35 @@ def _validate_simple_file(
     issues = _common_issues(root, path, data, text)
     if unwrap_key and isinstance(data, dict) and set(data) == {unwrap_key}:
         data = data[unwrap_key]
+
+    # v0.2 判别式 kind（specs/13 D-o）：x402 fixture/mandate 换成自己的 schema，
+    # 不进交易所侧的 MockExchangeEnv 自洽检查
+    kind = data.get("kind", "exchange") if isinstance(data, dict) else "exchange"
+    if kind not in ("exchange", "x402"):
+        issues.append(
+            Issue(file=_rel(root, path), code="schema", message=f"未知 kind: {kind!r}")
+        )
+        return issues
+    if kind == "x402":
+        from ..env.x402_fixture import X402FixtureSpec
+        from .schema import X402MandateSpec
+
+        model = X402FixtureSpec if model is FixtureSpec else X402MandateSpec
+
     parsed, schema_issues = _schema_issues(root, path, model, data)
     issues.extend(schema_issues)
+
+    # x402 fixture 自洽性：构造 X402MockEnv 走一遍守恒护栏（specs/13 §5）
+    if parsed is not None and model.__name__ == "X402FixtureSpec":
+        from ..env.base import InvariantViolation
+        from ..env.x402 import X402MockEnv
+
+        try:
+            X402MockEnv(parsed)  # type: ignore[arg-type]
+        except InvariantViolation as exc:
+            issues.append(
+                Issue(file=_rel(root, path), code="fixture-invariant", message=str(exc))
+            )
 
     # fixture 自洽性：free/locked 与挂单守恒（FP03；schema 失败时跳过）
     if parsed is not None and model is FixtureSpec:

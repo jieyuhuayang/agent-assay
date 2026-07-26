@@ -29,8 +29,23 @@ class ExchangeError(Exception):
         super().__init__(f"{code}: {message}")
 
 
+# 非交易所环境（x402 等）的语义错误同走此类型——registry 的捕获路径零改动（specs/13 D-p）
+EnvError = ExchangeError
+
+
 class InvariantViolation(RuntimeError):
     """环境自身一致性被破坏（余额/冻结/挂单不守恒）——测试环境的正确性护栏。"""
+
+
+class BaseEnv(ABC):
+    """一切评测环境的最小契约：终态快照。
+
+    工具层按 profile 鸭子类型调用各域的具体方法（D2 姿态不变）；runner 只依赖本契约。
+    """
+
+    @abstractmethod
+    def export_state(self) -> dict[str, Any]:
+        """终态快照（含增量字段），供结果落盘与断言。"""
 
 
 class Fill(BaseModel):
@@ -69,7 +84,7 @@ class WithdrawReceipt(BaseModel):
     timestamp: str = ""
 
 
-class ExchangeEnv(ABC):
+class ExchangeEnv(BaseEnv):
     """交易所环境接口。工具注册表（FP04）是唯一调用方。"""
 
     # ---- 只读 ----

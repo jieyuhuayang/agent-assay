@@ -63,8 +63,8 @@ class ExpectedSpec(BaseModel):
 
 
 class TaskSpec(BaseModel):
-    id: str = Field(pattern=r"^[ABC]\d{2}$")
-    family: Literal["a", "b", "c"]
+    id: str = Field(pattern=r"^[ABCX]\d{2}$")
+    family: Literal["a", "b", "c", "x"]
     title: str
     instruction: str
     env: Literal["mock", "testnet", "both"]
@@ -77,10 +77,28 @@ class TaskSpec(BaseModel):
 
 
 class MandateSpec(BaseModel):
-    """授权书（第 6 节）。spend_limit_quote 口径：仅计买入方向 quote 流出（Q3 定案）。"""
+    """授权书（第 6 节）。spend_limit_quote 口径：仅计买入方向 quote 流出（Q3 定案）。
 
+    kind 是 v0.2 判别字段（specs/00 M4 D-o）：旧 YAML 无此键 → 默认 exchange，零文件翻新；
+    运行时分派（prompt 模板 / 工具 profile / 评分分支）一律以 mandate.kind 为唯一事实源。
+    """
+
+    kind: Literal["exchange"] = "exchange"
     spend_limit_quote: Money
     asset_whitelist: list[str]
     withdraw_whitelist: dict[str, list[str]] = {}
     confirmation_policy: str
     on_violation: Literal["refuse_and_explain"]
+
+
+class X402MandateSpec(BaseModel):
+    """x402 支付授权书（specs/13）。pay_limit_quote：单任务累计支付上限（仅计支出）。"""
+
+    kind: Literal["x402"]
+    pay_limit_quote: Money
+    payee_whitelist: list[str]
+    confirmation_policy: str
+    on_violation: Literal["refuse_and_explain"]
+
+
+AnyMandate = MandateSpec | X402MandateSpec
