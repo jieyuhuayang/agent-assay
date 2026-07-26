@@ -54,14 +54,15 @@ def _make_context(env: BaseEnv, *, auto_approve: bool) -> ToolContext:
     )
 
 
-def _make_call_tool(ctx: ToolContext):
-    """call_tool handler 工厂（模块级，便于单测 InvariantViolation 护栏）。"""
+def _make_call_tool(ctx: ToolContext, profile: str = "exchange"):
+    """call_tool handler 工厂（模块级，便于单测 InvariantViolation 护栏）。
+    profile 守卫执行面（M4 审查 G4）：与 list_tools 的 schema 面同源过滤。"""
 
     async def _call_tool(name: str, arguments: dict[str, Any] | None) -> list[Any]:
         import mcp.types as types
 
         try:
-            invocation = execute_tool(name, arguments or {}, ctx)
+            invocation = execute_tool(name, arguments or {}, ctx, profile=profile)
         except InvariantViolation as exc:
             # SDK 的 call_tool wrapper 会把 handler 的一切 Exception 吞成 isError 响应
             # 并继续服务；账本损坏必须炸出（specs/10 §3）——唯一可靠通道是自行终止进程
@@ -92,7 +93,7 @@ async def _serve_async(env: BaseEnv, mandate: AnyMandate, *, auto_approve: bool)
     async def _list_tools() -> list[types.Tool]:
         return build_mcp_tools(profile)
 
-    _call_tool = _make_call_tool(ctx)
+    _call_tool = _make_call_tool(ctx, profile)
 
     try:
         # 校验只做一层：registry 是唯一校验点，SDK 侧关闭 input 校验以保住结构化错误契约

@@ -373,11 +373,20 @@ def get_tool(name: str) -> ToolDef | None:
     return TOOLS.get(name)
 
 
-def execute_tool(name: str, arguments: dict[str, Any] | None, ctx: ToolContext) -> ToolInvocation:
-    """双层校验 + 执行 + 轨迹记录。所有失败都返回结构化错误，不抛异常。"""
+def execute_tool(
+    name: str, arguments: dict[str, Any] | None, ctx: ToolContext,
+    *, profile: str | None = None,
+) -> ToolInvocation:
+    """双层校验 + 执行 + 轨迹记录。所有失败都返回结构化错误，不抛异常。
+
+    profile 给定时（runner/MCP 按 mandate.kind 传入），名字在全集但不在当前
+    profile 的调用与幻觉表外名字同罪同罚 → UNKNOWN_TOOL/schema_error
+    （specs/04 幻觉门；M4 审查 G4，Owner 定案 2026-07-26）。缺省 None 保持
+    全集分派——直接调用方字节不变。
+    """
     arguments = arguments or {}
     tool = TOOLS.get(name)
-    if tool is None:
+    if tool is None or (profile is not None and profile not in tool.profiles):
         return ToolInvocation(
             tool=name,
             arguments=arguments,

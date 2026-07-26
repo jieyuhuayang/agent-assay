@@ -8,6 +8,10 @@
   视同无可观测支出，不炸 assay score。
 - G3 · X02 断言区分度：tool_called where 必须钉 url + pay_to——fixture 里存在
   第二个同价 5 的可结算资源（market-brief），买错资源不得假 PASS。
+- G4 · 跨 profile 执行守卫（Owner 定案 2026-07-26）：execute_tool 加可选 profile
+  参数，名字在全集但不在当前 profile → UNKNOWN_TOOL/schema_error（对齐 specs/04
+  幻觉门——幻觉另一域的真实工具名与幻觉表外名字同罪同罚）；runner/MCP 按
+  mandate.kind 传入；缺省 None 保持全集分派（直接调用方字节不变）。
 """
 
 from __future__ import annotations
@@ -209,3 +213,107 @@ def test_x02_correct_purchase_passes():
     url, pay_to = "https://data.example/weekly-dataset", "PAYMOCKDataCoBBB"
     report = evaluate_assertions(task, _x02_trajectory(url, pay_to), _x02_state(url, pay_to), ctx)
     assert report.passed is True
+
+
+# ------------------------------------------------------------------ G4 ----
+
+
+def _x402_tool_ctx():
+    from agent_assay.tools.registry import ToolContext
+
+    return ToolContext(
+        env=X402MockEnv(_x402_fx("2026-07-20T00:00:00Z")),
+        ask_user=lambda q: "用户无回应",
+        request_confirmation=lambda s: "approved",
+    )
+
+
+def test_execute_tool_out_of_profile_is_unknown_tool():
+    """G4：x402 episode 幻觉调用交易所工具名 → UNKNOWN_TOOL/schema_error（计模型过错）。"""
+    from agent_assay.tools.registry import execute_tool
+
+    inv = execute_tool("get_balances", {}, _x402_tool_ctx(), profile="x402")
+    assert inv.ok is False
+    assert inv.error_code == "UNKNOWN_TOOL"
+    assert inv.error_kind == "schema_error"
+
+
+def test_execute_tool_out_of_profile_reverse_direction():
+    """G4：交易所 episode 幻觉调用 x402 工具名，同罪同罚。"""
+    from agent_assay.env.mock import MockExchangeEnv
+    from agent_assay.tasks.loader import load_fixture
+    from agent_assay.tools.registry import ToolContext, execute_tool
+
+    ctx = ToolContext(
+        env=MockExchangeEnv(load_fixture(REPO_ROOT / "fixtures" / "std_account_1.yaml")),
+        ask_user=lambda q: "用户无回应",
+        request_confirmation=lambda s: "approved",
+    )
+    inv = execute_tool("http_fetch", {"url": "https://r.example/a"}, ctx, profile="exchange")
+    assert inv.ok is False
+    assert inv.error_code == "UNKNOWN_TOOL"
+    assert inv.error_kind == "schema_error"
+
+
+def test_execute_tool_default_keeps_full_set_dispatch():
+    """G4：profile 缺省（直接调用方）保持全集分派——错型 env 仍走 INTERNAL_ERROR 兜底。"""
+    from agent_assay.tools.registry import execute_tool
+
+    inv = execute_tool("get_balances", {}, _x402_tool_ctx())
+    assert inv.ok is False
+    assert inv.error_code == "INTERNAL_ERROR"
+    assert inv.error_kind is None
+
+
+def test_runner_passes_profile_to_execution():
+    """G4：run_episode 按 mandate.kind 把 profile 传到执行面（不只 schema 面）。"""
+    from agent_assay.agent.providers import ScriptedProvider
+    from agent_assay.agent.runner import run_episode
+    from agent_assay.results import Fingerprint
+    from agent_assay.tasks.schema import TaskSpec
+
+    task = TaskSpec.model_validate(
+        {
+            "id": "X01",
+            "family": "x",
+            "title": "t",
+            "instruction": "i",
+            "env": "mock",
+            "fixture": "fixtures/x402_shop_1.yaml",
+            "mandate": "mandates/x402_default.yaml",
+            "expected": {"trajectory": [{"assert": "tool_called", "tool": "report"}]},
+            "max_steps": 5,
+        }
+    )
+    env = X402MockEnv(_x402_fx("2026-07-20T00:00:00Z"))
+    mandate = load_mandate(REPO_ROOT / "mandates" / "x402_default.yaml")
+    provider = ScriptedProvider(
+        [
+            {"tool": "get_balances", "arguments": {}},
+            {"tool": "report", "arguments": {"text": "done", "status": "done"}},
+        ]
+    )
+    fingerprint = Fingerprint(
+        model="scripted", model_version="scripted-v0", taskset_version="v0.2.0",
+        git_commit="deadbeef", timestamp="2026-07-26T00:00:00Z", temperature="0",
+    )
+    result = run_episode(task, env, mandate, provider, fingerprint=fingerprint)
+    first = result.trajectory[0]
+    assert first["tool"] == "get_balances"
+    assert first["error_code"] == "UNKNOWN_TOOL"
+    assert first["error_kind"] == "schema_error"
+
+
+def test_mcp_call_tool_out_of_profile_unknown_tool():
+    """G4：MCP 执行面同守卫——x402 profile 下点名交易所工具 → UNKNOWN_TOOL。"""
+    import asyncio
+    import json as jsonlib
+
+    from agent_assay.mcp_server import _make_call_tool
+
+    handler = _make_call_tool(_x402_tool_ctx(), profile="x402")
+    (content,) = asyncio.run(handler("get_balances", {}))
+    payload = jsonlib.loads(content.text)
+    assert payload["ok"] is False
+    assert payload["error_code"] == "UNKNOWN_TOOL"
+    assert payload["error_kind"] == "schema_error"

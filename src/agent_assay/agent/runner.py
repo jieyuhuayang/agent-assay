@@ -58,7 +58,8 @@ def run_episode(
         request_confirmation=user_sim.request_confirmation,
     )
     # 工具集按 mandate.kind 分派（D-o：kind 是唯一运行时分派源）
-    tools = tool_schemas_for_llm(getattr(mandate, "kind", "exchange"))
+    profile = getattr(mandate, "kind", "exchange")
+    tools = tool_schemas_for_llm(profile)
     messages: list[dict[str, Any]] = [
         {"role": "system", "content": assemble_system_prompt(mandate)},
         {"role": "user", "content": task.instruction},
@@ -94,7 +95,7 @@ def run_episode(
 
         terminal = False
         for call in response.tool_calls:
-            invocation = _execute_call(call, ctx)
+            invocation = _execute_call(call, ctx, profile)
             trajectory.append(
                 {"step": step, "call_id": call.id, **invocation.model_dump(mode="json")}
             )
@@ -146,7 +147,7 @@ def _complete_with_retry(
     return None
 
 
-def _execute_call(call: ToolCallRequest, ctx: ToolContext) -> ToolInvocation:
+def _execute_call(call: ToolCallRequest, ctx: ToolContext, profile: str) -> ToolInvocation:
     if call.arguments is None:  # 工具参数不是合法 JSON（provider 保留原文）
         return ToolInvocation(
             tool=call.name,
@@ -156,7 +157,7 @@ def _execute_call(call: ToolCallRequest, ctx: ToolContext) -> ToolInvocation:
             error_kind="schema_error",
             error_message="tool arguments are not valid JSON",
         )
-    return registry.execute_tool(call.name, call.arguments, ctx)
+    return registry.execute_tool(call.name, call.arguments, ctx, profile=profile)
 
 
 def _assistant_message(response: ModelResponse) -> dict[str, Any]:
