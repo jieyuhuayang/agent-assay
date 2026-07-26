@@ -39,7 +39,7 @@ def validate(
     typer.echo(f"validate OK ({summary})")
 
 
-TASKSET_VERSION = "v0.1.0"
+TASKSET_VERSION = "v0.2.0"
 
 
 def _git_commit(root: Path) -> str:
@@ -79,7 +79,7 @@ def _make_provider(model: str, root: Path, task_id: str):
 @app.command()
 def run(
     model: str = typer.Option(..., "--model", help="litellm 模型名，或 scripted"),
-    family: str = typer.Option("a,b,c", "--family", help="逗号分隔任务族"),
+    family: str = typer.Option("a,b,c,x", "--family", help="逗号分隔任务族"),
     env: str = typer.Option("mock", "--env", help="mock | testnet"),
     task: str = typer.Option(None, "--task", help="只跑指定任务 ID"),
     out: Path = typer.Option(None, "--out", help="结果输出目录"),
