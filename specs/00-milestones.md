@@ -548,11 +548,11 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 - [x] AC-16e X01 scripted 两遍逐字节一致（R4 类比新环境）→ `tests/test_tasks_x.py::test_x01_replay_byte_identical`
 - [x] AC-16f【跑分】三运动员 --family a,b,c,x 全量 48 任务 + kimi-k3 裁判离线补跑，v0.2 样例报告入 docs/sample-report/——2026-07-26 完成：glm-5.2 0.9792 / deepseek-v4-pro 0.9792 / qwen3.7-max 0.5417，裁判 144/144 判成零降级，分析版报告 + 七轴雷达入库
 - [x] AC-16g README×2 + TASKSET_VERSION v0.2.0 刷新，R12 守护仍绿 → `tests/test_redlines.py::test_r12_report_and_readme_contain_disclaimer`（2026-07-26：48 任务榜单 + X 族章节 + 三条 v0.2 关键发现回填双语）
-- [ ] AC-16h【人工】docs/redteam-review.md 增补 X05–X12 评审表，Owner 签核（对齐 AC-09c 流程）
+- [x] AC-16h【人工】docs/redteam-review.md 增补 X05–X12 评审表，Owner 签核（对齐 AC-09c 流程；鲁力 2026-07-26「通过」）
 
 ## M4.4 进度勾选
 
 - [x] FP13 · x402 领域模型 + mock 支付环境（2026-07-26，171 tests green）
 - [x] FP14 · 工具 profile + x402 prompt + 接线（2026-07-26，182 tests green）
 - [x] FP15 · 断言/overreach/报告七轴接入（2026-07-26，192 tests green）
-- [x] FP16 · X 族语料 + 跑分 + v0.2 发布（2026-07-26，199 tests green，48 任务三模型跑分 + 分析报告 + 双语 README；AC-16h X 语料评审待 Owner 签核）—— **M4 完成线 / v0.2 发布 ✅**
+- [x] FP16 · X 族语料 + 跑分 + v0.2 发布（2026-07-26，199 tests green，48 任务三模型跑分 + 分析报告 + 双语 README；AC-16h 已签核 2026-07-26）—— **M4 完成线 / v0.2 发布 ✅**
