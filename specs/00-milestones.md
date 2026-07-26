@@ -483,16 +483,16 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 
 ### FP13 · x402 领域模型 + mock 支付环境（specs/13-x402-env.md）
 
-- [ ] AC-13a fixture/mandate kind 分派加载，金额 Decimal → `tests/test_x402_env.py::test_fixture_and_mandate_load_kind_dispatch`、`tests/test_loader.py::test_load_fixture_dispatches_on_kind`
-- [ ] AC-13b 免费资源直接返回内容；付费资源返回结构化 402 报价 → `tests/test_x402_env.py::test_fetch_free_and_402_offer`
-- [ ] AC-13c 匹配支付扣款并解锁；错配支付（金额或 payee）照常执行但不解锁 → `::test_pay_matching_unlocks`、`::test_pay_mismatched_executes_without_unlock`
-- [ ] AC-13d 语义错误码 UNKNOWN_RESOURCE / INSUFFICIENT_BALANCE / INVALID_AMOUNT → `::test_semantic_error_codes`
-- [ ] AC-13e 守恒 invariant（初始钱包 == 现钱包 + Σ新支付）破坏即 raise → `::test_invariant_violation_raises`
-- [ ] AC-13f export_state 形态与 balance 断言兼容；new_payments 为增量（不含存量流水）→ `::test_export_state_shape_and_delta`
-- [ ] AC-13g double_charge / paywall_despite_free 行为确定性 → `::test_double_charge_behavior`、`::test_paywall_despite_free`
-- [ ] AC-13h D3：越限金额与非白名单 payee 照常执行出正常回执 → `::test_env_executes_mandate_violating_payments`
-- [ ] AC-13i 确定性：同一调用序列两遍 export_state 全等 → `::test_deterministic_replay`
-- [ ] AC-13j validate 对 x402 fixture 走自己的校验（不进 MockExchangeEnv）；坏 fixture 被标记 → `tests/test_validate.py::test_x402_fixture_kind_dispatch`
+- [x] AC-13a fixture/mandate kind 分派加载，金额 Decimal → `tests/test_x402_env.py::test_fixture_and_mandate_load_kind_dispatch`、`tests/test_loader.py::test_load_fixture_dispatches_on_kind`
+- [x] AC-13b 免费资源直接返回内容；付费资源返回结构化 402 报价 → `tests/test_x402_env.py::test_fetch_free_and_402_offer`
+- [x] AC-13c 匹配支付扣款并解锁；错配支付（金额或 payee）照常执行但不解锁 → `::test_pay_matching_unlocks`、`::test_pay_mismatched_executes_without_unlock`
+- [x] AC-13d 语义错误码 UNKNOWN_RESOURCE / INSUFFICIENT_BALANCE / INVALID_AMOUNT → `::test_semantic_error_codes`
+- [x] AC-13e 守恒 invariant（初始钱包 == 现钱包 + Σ新支付）破坏即 raise → `::test_invariant_violation_raises`
+- [x] AC-13f export_state 形态与 balance 断言兼容；new_payments 为增量（不含存量流水）→ `::test_export_state_shape_and_delta`
+- [x] AC-13g double_charge / paywall_despite_free 行为确定性 → `::test_double_charge_behavior`、`::test_paywall_despite_free`
+- [x] AC-13h D3：越限金额与非白名单 payee 照常执行出正常回执 → `::test_env_executes_mandate_violating_payments`
+- [x] AC-13i 确定性：同一调用序列两遍 export_state 全等 → `::test_deterministic_replay`
+- [x] AC-13j validate 对 x402 fixture 走自己的校验（不进 MockExchangeEnv）；坏 fixture 被标记 → `tests/test_validate.py::test_x402_fixture_kind_dispatch`
 
 ### FP14 · 工具 profile + x402 prompt + 接线（specs/14-x402-tools.md）
 
@@ -530,7 +530,7 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 
 ## M4.4 进度勾选
 
-- [ ] FP13 · x402 领域模型 + mock 支付环境
+- [x] FP13 · x402 领域模型 + mock 支付环境（2026-07-26，171 tests green）
 - [ ] FP14 · 工具 profile + x402 prompt + 接线
 - [ ] FP15 · 断言/overreach/报告七轴接入
 - [ ] FP16 · X 族语料 + 跑分 + v0.2 发布 —— **M4 完成线 / v0.2 发布**
