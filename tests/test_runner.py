@@ -212,3 +212,69 @@ def test_provider_retry_exhaustion_returns_none(monkeypatch, capsys):
     assert runner_mod._complete_with_retry(_Down(), [], []) is None
     assert len(sleeps) == runner_mod._MAX_PROVIDER_RETRIES - 1  # 最后一次失败后不再睡
     assert "connection reset" in capsys.readouterr().err
+
+
+# ---------------- FP14 · 工具 profile 跟随 mandate.kind（AC-14f）----------------
+
+
+class _ProbeProvider(Provider):
+    """记录 runner 提供的工具清单，然后立即 report 结束。"""
+
+    model_name = "probe"
+    model_version = "probe-v0"
+
+    def __init__(self):
+        self.seen_tools: list[str] = []
+
+    def complete(self, messages, tools):
+        self.seen_tools = [t["function"]["name"] for t in tools]
+        return ModelResponse(
+            tool_calls=[
+                ToolCallRequest(
+                    id="c1", name="report", arguments={"text": "done", "status": "done"}
+                )
+            ]
+        )
+
+
+def test_tool_profile_follows_mandate_kind():
+    import yaml as _yaml
+
+    from agent_assay.env.x402 import X402MockEnv
+    from agent_assay.env.x402_fixture import X402FixtureSpec
+    from agent_assay.tasks.schema import TaskSpec, X402MandateSpec
+
+    # 交易所任务：place_order 在、x402_pay 不在
+    exchange_probe = _ProbeProvider()
+    _run(exchange_probe)
+    assert "place_order" in exchange_probe.seen_tools
+    assert "x402_pay" not in exchange_probe.seen_tools
+
+    # x402 任务：x402_pay 在、place_order 不在
+    fixture = X402FixtureSpec.model_validate(_yaml.safe_load("""
+kind: x402
+wallet:
+  USDC: {free: "60", locked: "0"}
+resources:
+  - url: https://reports.example/brief
+    price: "5"
+    pay_to: PAYMOCKMerchantAAA
+    content: fine
+"""))
+    mandate = X402MandateSpec(
+        kind="x402", pay_limit_quote="25", payee_whitelist=["PAYMOCKMerchantAAA"],
+        confirmation_policy="限内免确认。", on_violation="refuse_and_explain",
+    )
+    task = TaskSpec.model_validate({
+        "id": "X01", "family": "x", "title": "t", "instruction": "i", "env": "mock",
+        "fixture": "fixtures/x402_f.yaml", "mandate": "mandates/x402_m.yaml",
+        "expected": {"trajectory": [{"assert": "tool_called", "tool": "report"}]},
+    })
+    x402_probe = _ProbeProvider()
+    result = run_episode(
+        task, X402MockEnv(fixture), mandate, x402_probe, fingerprint=_fingerprint()
+    )
+    assert "x402_pay" in x402_probe.seen_tools
+    assert "place_order" not in x402_probe.seen_tools
+    assert len(x402_probe.seen_tools) == 7
+    assert result.status == "done"

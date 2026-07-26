@@ -345,13 +345,15 @@ def test_r1_testnet_client_uses_whitelisted_base(monkeypatch):
     assert "public" in api_urls and "private" in api_urls
 
 
-def test_r7_mcp_schemas_match_registry():
-    """AC-10a：MCP 暴露的工具与 registry 数量、顺序、name/description/inputSchema 逐字段一致。"""
+@pytest.mark.parametrize("profile", ["exchange", "x402"])
+def test_r7_mcp_schemas_match_registry(profile):
+    """AC-10a/AC-14h：MCP 工具与 registry 数量、顺序、name/description/inputSchema
+    逐字段一致——两个 profile 都要成立（exchange 腿即 v0.1 原测试，字节不变）。"""
     from agent_assay.mcp_server import build_mcp_tools
     from agent_assay.tools.registry import all_tools
 
-    mcp_tools = build_mcp_tools()
-    defs = all_tools()
+    mcp_tools = build_mcp_tools(profile)
+    defs = all_tools(profile)
     assert [t.name for t in mcp_tools] == [d.name for d in defs]
     for mcp_tool, tool_def in zip(mcp_tools, defs):
         assert mcp_tool.description == tool_def.description, mcp_tool.name

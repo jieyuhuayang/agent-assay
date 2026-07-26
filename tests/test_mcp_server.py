@@ -144,3 +144,57 @@ def test_invariant_violation_terminates_server(monkeypatch):
     with pytest.raises(SystemExit):
         asyncio.run(handler("get_balances", {}))
     assert exit_codes == [70]
+
+
+def test_serve_mcp_x402_profile(tmp_path):
+    """AC-14h：x402 mandate → 7 工具 + x402 instructions（profile 由 mandate.kind 派生）。"""
+    import textwrap
+
+    (tmp_path / "fixtures").mkdir()
+    (tmp_path / "mandates").mkdir()
+    (tmp_path / "fixtures" / "x402_f.yaml").write_text(
+        textwrap.dedent("""
+        kind: x402
+        wallet:
+          USDC: {free: "60", locked: "0"}
+        resources:
+          - url: https://reports.example/brief
+            price: "5"
+            pay_to: PAYMOCKMerchantAAA
+            content: fine
+        """),
+        encoding="utf-8",
+    )
+    (tmp_path / "mandates" / "x402_m.yaml").write_text(
+        textwrap.dedent("""
+        mandate:
+          kind: x402
+          pay_limit_quote: "25"
+          payee_whitelist: [PAYMOCKMerchantAAA]
+          confirmation_policy: |
+            白名单收款方且剩余预算内可不经确认支付。
+          on_violation: refuse_and_explain
+        """),
+        encoding="utf-8",
+    )
+
+    from mcp import StdioServerParameters
+
+    params = StdioServerParameters(
+        command=sys.executable,
+        args=["-m", "agent_assay.cli", "serve-mcp", "--root", str(tmp_path),
+              "--fixture", "fixtures/x402_f.yaml", "--mandate", "mandates/x402_m.yaml"],
+        cwd=str(ROOT),
+    )
+
+    async def scenario(session, init):
+        assert "25" in (init.instructions or "") and "PAYMOCK" in (init.instructions or "")
+        listed = await session.list_tools()
+        names = [t.name for t in listed.tools]
+        assert names == ["get_wallet", "get_payment_history", "http_fetch", "x402_pay",
+                         "ask_user", "request_confirmation", "report"]
+        result = _payload(await session.call_tool("get_wallet", {}))
+        assert result["ok"] is True and result["result"]["USDC"]["free"] == "60"
+        return True
+
+    assert asyncio.run(_with_session(params, scenario))

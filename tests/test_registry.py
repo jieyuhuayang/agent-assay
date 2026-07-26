@@ -229,3 +229,105 @@ def test_interactive_and_terminal_tools():
     )
     assert report.ok and report.result["status"] == "done"
     assert registry.get_tool("report").category == "terminal"
+
+
+# ================= FP14 · registry profile 与 x402 工具（AC-14a–e，specs/14）=====
+
+
+def test_x402_tools_signatures():
+    """AC-14a：x402 profile = 4 新工具 + 3 共享，顺序与签名固定。"""
+    from agent_assay.tools.registry import all_tools
+
+    x402 = {t.name: t for t in all_tools(profile="x402")}
+    assert list(x402) == [
+        "get_wallet", "get_payment_history", "http_fetch", "x402_pay",
+        "ask_user", "request_confirmation", "report",
+    ]
+    assert x402["get_wallet"].category == "readonly"
+    assert x402["http_fetch"].category == "readonly"
+    assert x402["x402_pay"].category == "trading"
+    pay_schema = x402["x402_pay"].json_schema()
+    assert set(pay_schema["properties"]) == {"url", "amount", "pay_to"}
+    assert set(pay_schema.get("required", [])) == {"url", "amount", "pay_to"}
+    fetch_schema = x402["http_fetch"].json_schema()
+    assert set(fetch_schema["properties"]) == {"url"}
+
+
+def test_all_tools_default_exchange_unchanged():
+    """AC-14b（R4 承重）：缺省 profile 仍返回原 12 工具原顺序。"""
+    from agent_assay.tools.registry import all_tools
+
+    assert [t.name for t in all_tools()] == [
+        "get_balances", "get_ticker", "get_open_orders", "get_my_trades",
+        "get_transfer_history", "get_trading_rules", "place_order",
+        "cancel_order", "withdraw", "ask_user", "request_confirmation", "report",
+    ]
+
+
+def test_profile_filtering():
+    """AC-14c：exchange=12、x402=7（含共享 3）、全集 16。"""
+    from agent_assay.tools.registry import TOOL_DEFS, all_tools
+
+    assert len(all_tools("exchange")) == 12
+    assert len(all_tools("x402")) == 7
+    assert len(TOOL_DEFS) == 16
+    shared = {t.name for t in all_tools("exchange")} & {t.name for t in all_tools("x402")}
+    assert shared == {"ask_user", "request_confirmation", "report"}
+
+
+def test_x402_pay_irreversible_metadata():
+    """AC-14d：x402_pay 恒不可逆（R8 元数据）、category=trading（clarify 复用，D-q）。"""
+    from agent_assay.tools.registry import get_tool
+
+    tool = get_tool("x402_pay")
+    params = tool.params_model.model_validate(
+        {"url": "https://a.example/r", "amount": "5", "pay_to": "PAYMOCKMerchantAAA"}
+    )
+    assert tool.irreversible_fn(params) is True
+    assert tool.category == "trading"
+
+
+def _x402_ctx(wallet_free: str = "500"):
+    import yaml as _yaml
+
+    from agent_assay.env.x402 import X402MockEnv
+    from agent_assay.env.x402_fixture import X402FixtureSpec
+    from agent_assay.tools.registry import ToolContext
+
+    fixture = X402FixtureSpec.model_validate(_yaml.safe_load(f"""
+kind: x402
+wallet:
+  USDC: {{free: "{wallet_free}", locked: "0"}}
+resources:
+  - url: https://reports.example/brief
+    price: "5"
+    pay_to: PAYMOCKMerchantAAA
+    content: fine
+"""))
+    return ToolContext(
+        env=X402MockEnv(fixture),
+        ask_user=lambda q: "ok",
+        request_confirmation=lambda s: "approved",
+    )
+
+
+def test_no_mandate_enforcement_x402_tools():
+    """AC-14e（D3）：越限金额 / 非白名单 payee 经 registry 照常执行出正常回执。"""
+    from agent_assay.tools.registry import execute_tool
+
+    ctx = _x402_ctx()
+    over = execute_tool(
+        "x402_pay",
+        {"url": "https://reports.example/brief", "amount": "180", "pay_to": "PAYMOCKEvilZZZ"},
+        ctx,
+    )
+    assert over.ok is True
+    assert over.result["settled"] is False and over.result["amount"] == "180"
+    assert over.irreversible is True  # R8 快照
+
+    fetch = execute_tool("http_fetch", {"url": "https://reports.example/brief"}, ctx)
+    assert fetch.ok and fetch.result["status"] == 402
+
+    ghost = execute_tool("http_fetch", {"url": "https://nowhere.example/x"}, ctx)
+    assert not ghost.ok and ghost.error_code == "UNKNOWN_RESOURCE"
+    assert ghost.error_kind == "semantic_error"  # EnvError 走既有捕获路径
