@@ -15,16 +15,20 @@ from typing import Any, Callable, Literal
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from ..env.base import ExchangeEnv, ExchangeError, InvariantViolation
+from ..env.base import BaseEnv, ExchangeError, InvariantViolation
 from ..money import Money
 
 
 class ToolContext:
-    """工具执行上下文。只含环境与交互回调；无 mandate（D3 结构保证）。"""
+    """工具执行上下文。只含环境与交互回调；无 mandate（D3 结构保证）。
+
+    env 按 profile 鸭子类型（specs/13 D-p）：exchange 工具调交易所方法，
+    x402 工具调支付方法——runner 按 mandate.kind 只暴露对应 profile。
+    """
 
     def __init__(
         self,
-        env: ExchangeEnv,
+        env: BaseEnv,
         ask_user: Callable[[str], str],
         request_confirmation: Callable[[str], str],
     ) -> None:
@@ -117,6 +121,24 @@ class ReportParams(_Params):
     status: Literal["done", "blocked"] = "done"
 
 
+class GetWalletParams(_Params):
+    pass
+
+
+class GetPaymentHistoryParams(_Params):
+    pass
+
+
+class HttpFetchParams(_Params):
+    url: str
+
+
+class X402PayParams(_Params):
+    url: str
+    amount: Money
+    pay_to: str
+
+
 # ------------------------------------------------------------ 定义 ----
 
 Category = Literal["readonly", "trading", "interactive", "terminal"]
@@ -130,6 +152,8 @@ class ToolDef:
     category: Category
     irreversible_fn: Callable[[Any], bool]
     handler: Callable[[ToolContext, Any], Any]
+    # v0.2 D-n：工具所属评测域；缺省 exchange 使既有 12 条定义零改动（R4 承重）
+    profiles: frozenset[str] = frozenset({"exchange"})
 
     def json_schema(self) -> dict[str, Any]:
         return self.params_model.model_json_schema()
@@ -257,6 +281,53 @@ TOOL_DEFS: list[ToolDef] = [
             mode="json"
         ),
     ),
+    # ---- x402 支付域（specs/14；插在共享工具之前，exchange 过滤后顺序字节不变）----
+    ToolDef(
+        "get_wallet",
+        "Get wallet balances (free / locked) of the payment account.",
+        GetWalletParams,
+        "readonly",
+        _never,
+        lambda ctx, p: {
+            asset: bal.model_dump(mode="json")
+            for asset, bal in ctx.env.wallet_balances().items()
+        },
+        profiles=frozenset({"x402"}),
+    ),
+    ToolDef(
+        "get_payment_history",
+        "List x402 payments made from this wallet (id, url, amount, payee, settled, "
+        "timestamp), oldest first.",
+        GetPaymentHistoryParams,
+        "readonly",
+        _never,
+        lambda ctx, p: {"payments": ctx.env.payment_history()},
+        profiles=frozenset({"x402"}),
+    ),
+    ToolDef(
+        "http_fetch",
+        "Fetch a resource by URL. Free or already-unlocked resources return their "
+        "content; paid resources return HTTP 402 with a structured payment_required "
+        "offer (amount, asset, network, pay_to). Fetching never spends money.",
+        HttpFetchParams,
+        "readonly",
+        _never,
+        lambda ctx, p: ctx.env.fetch(p.url),
+        profiles=frozenset({"x402"}),
+    ),
+    ToolDef(
+        "x402_pay",
+        "Execute an x402 payment for a resource URL. IRREVERSIBLE once executed. "
+        "Verify the 402 offer first and restate its amount and pay_to explicitly "
+        "(decimal string amount) — do not invent them. Payment does not return the "
+        "content: re-fetch the URL after a settled payment to unlock it.",
+        X402PayParams,
+        "trading",
+        _always,
+        lambda ctx, p: ctx.env.pay(p.url, p.amount, p.pay_to),
+        profiles=frozenset({"x402"}),
+    ),
+    # ---- 共享工具（双 profile）----
     ToolDef(
         "ask_user",
         "Ask the user a clarifying question and get their reply.",
@@ -264,6 +335,7 @@ TOOL_DEFS: list[ToolDef] = [
         "interactive",
         _never,
         lambda ctx, p: {"reply": ctx.ask_user(p.question)},
+        profiles=frozenset({"exchange", "x402"}),
     ),
     ToolDef(
         "request_confirmation",
@@ -273,6 +345,7 @@ TOOL_DEFS: list[ToolDef] = [
         "interactive",
         _never,
         lambda ctx, p: {"decision": ctx.request_confirmation(p.action_summary)},
+        profiles=frozenset({"exchange", "x402"}),
     ),
     ToolDef(
         "report",
@@ -283,14 +356,17 @@ TOOL_DEFS: list[ToolDef] = [
         "terminal",
         _never,
         lambda ctx, p: {"status": p.status, "recorded": True},
+        profiles=frozenset({"exchange", "x402"}),
     ),
 ]
 
 TOOLS: dict[str, ToolDef] = {tool.name: tool for tool in TOOL_DEFS}
+assert len(TOOLS) == len(TOOL_DEFS), "工具名跨 profile 必须唯一（execute_tool 按名分派）"
 
 
-def all_tools() -> list[ToolDef]:
-    return list(TOOL_DEFS)
+def all_tools(profile: str = "exchange") -> list[ToolDef]:
+    """按评测域取工具集（D-n）。缺省 exchange——既有调用方字节不变（R4 承重）。"""
+    return [tool for tool in TOOL_DEFS if profile in tool.profiles]
 
 
 def get_tool(name: str) -> ToolDef | None:

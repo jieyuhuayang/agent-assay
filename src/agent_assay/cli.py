@@ -138,13 +138,24 @@ def run(
     for spec in selected:
         provider = _make_provider(model, root, spec.id)
         fixture = load_fixture(root / spec.fixture)
+        mandate = load_mandate(root / spec.mandate)
+        fixture_kind = getattr(fixture, "kind", "exchange")
+        if fixture_kind != mandate.kind:
+            typer.echo(
+                f"{spec.id}: fixture kind={fixture_kind} 与 mandate kind={mandate.kind} 不一致",
+                err=True,
+            )
+            raise typer.Exit(2)
         if env == "testnet":
             from .env.testnet import TestnetExchangeEnv
 
             exchange = TestnetExchangeEnv(client=testnet_client)
+        elif fixture_kind == "x402":
+            from .env.x402 import X402MockEnv
+
+            exchange = X402MockEnv(fixture)
         else:
             exchange = MockExchangeEnv(fixture)
-        mandate = load_mandate(root / spec.mandate)
         record = run_episode(
             spec,
             exchange,
@@ -166,7 +177,8 @@ def run(
             record.scoring = score_episode_structural(record)
         else:
             # 内联评分（AC-08g）：断言 + 统计恒确定；judge 仅在显式给出模型时运行（Q5）
-            ctx = ScoringContext(mandate=mandate, rules=fixture.rules)
+            rules = fixture.rules if fixture_kind == "exchange" else None
+            ctx = ScoringContext(mandate=mandate, rules=rules)
             record.scoring = score_episode(spec, record, ctx, judge_model=judge_model)
         save_result(record, out_dir / f"{spec.id}.json")
         typer.echo(
@@ -225,9 +237,12 @@ def score(
             continue
         task_path = root / "tasks" / record.task_id[0].lower() / f"{record.task_id}.yaml"
         spec = load_task(task_path)
+        score_fixture = load_fixture(root / spec.fixture)
         ctx = ScoringContext(
             mandate=load_mandate(root / spec.mandate),
-            rules=load_fixture(root / spec.fixture).rules,
+            rules=score_fixture.rules
+            if getattr(score_fixture, "kind", "exchange") == "exchange"
+            else None,
         )
         record.scoring = score_episode(spec, record, ctx, judge_model=judge_model)
         save_result(record, path)  # 唯一落盘路径（R2 脱敏）
@@ -289,7 +304,18 @@ def serve_mcp(
             typer.echo(f"{kind} 文件不存在: {path}", err=True)
             raise typer.Exit(2)
 
+    fixture_spec = load_fixture(fixture_path)
+    mandate_spec = load_mandate(mandate_path)
+    fixture_kind = getattr(fixture_spec, "kind", "exchange")
+    if fixture_kind != mandate_spec.kind:
+        typer.echo(
+            f"fixture kind={fixture_kind} 与 mandate kind={mandate_spec.kind} 不一致", err=True
+        )
+        raise typer.Exit(2)
     if env == "testnet":
+        if mandate_spec.kind == "x402":
+            typer.echo("x402 域是纯 mock（specs/00 M4）；不支持 --env testnet", err=True)
+            raise typer.Exit(2)
         from .env.testnet import TestnetConfigError, TestnetExchangeEnv, TestnetUnavailableError
 
         try:
@@ -299,9 +325,12 @@ def serve_mcp(
             typer.echo(str(exc), err=True)
             raise typer.Exit(2)
         typer.echo("testnet 模式：--fixture 不生效（账户状态来自 testnet 实盘假资金）", err=True)
+    elif fixture_kind == "x402":
+        from .env.x402 import X402MockEnv
+
+        exchange = X402MockEnv(fixture_spec)
     else:
-        exchange = MockExchangeEnv(load_fixture(fixture_path))
-    mandate_spec = load_mandate(mandate_path)
+        exchange = MockExchangeEnv(fixture_spec)
     # stdio 是协议通道：人类可读日志一律走 stderr（specs/10 §4）
     typer.echo(
         f"agent-assay MCP server (stdio): env={env} fixture={fixture} mandate={mandate}",

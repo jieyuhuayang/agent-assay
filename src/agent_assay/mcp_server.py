@@ -20,8 +20,8 @@ from typing import TYPE_CHECKING, Any
 from .env.base import InvariantViolation
 
 from .agent.prompt import assemble_system_prompt
-from .env.base import ExchangeEnv
-from .tasks.schema import MandateSpec
+from .env.base import BaseEnv
+from .tasks.schema import AnyMandate
 from .tools.registry import ToolContext, all_tools, execute_tool
 
 if TYPE_CHECKING:  # 仅类型标注；运行时在函数体内 lazy import，保持启动轻量
@@ -33,17 +33,19 @@ MCP_NO_USER_REPLY = (
 )
 
 
-def build_mcp_tools() -> list[types.Tool]:
-    """反射 registry → MCP Tool 列表（AC-10a 的被测对象）。纯函数，无 IO。"""
+def build_mcp_tools(profile: str = "exchange") -> list[types.Tool]:
+    """反射 registry → MCP Tool 列表（AC-10a/AC-14h 的被测对象）。纯函数，无 IO。
+
+    缺省 exchange：v0.1 客户端面字节不变（R4 承重）。"""
     import mcp.types as types
 
     return [
         types.Tool(name=t.name, description=t.description, inputSchema=t.json_schema())
-        for t in all_tools()
+        for t in all_tools(profile)
     ]
 
 
-def _make_context(env: ExchangeEnv, *, auto_approve: bool) -> ToolContext:
+def _make_context(env: BaseEnv, *, auto_approve: bool) -> ToolContext:
     decision = "approved" if auto_approve else "denied"
     return ToolContext(
         env=env,
@@ -77,17 +79,18 @@ def _make_call_tool(ctx: ToolContext):
     return _call_tool
 
 
-async def _serve_async(env: ExchangeEnv, mandate: MandateSpec, *, auto_approve: bool) -> None:
+async def _serve_async(env: BaseEnv, mandate: AnyMandate, *, auto_approve: bool) -> None:
     import mcp.types as types
     from mcp.server.lowlevel import Server
     from mcp.server.stdio import stdio_server
 
     server = Server("agent-assay", instructions=assemble_system_prompt(mandate))
     ctx = _make_context(env, auto_approve=auto_approve)
+    profile = getattr(mandate, "kind", "exchange")  # D-o：kind 是唯一分派源
 
     @server.list_tools()
     async def _list_tools() -> list[types.Tool]:
-        return build_mcp_tools()
+        return build_mcp_tools(profile)
 
     _call_tool = _make_call_tool(ctx)
 
@@ -101,7 +104,7 @@ async def _serve_async(env: ExchangeEnv, mandate: MandateSpec, *, auto_approve: 
         await server.run(read_stream, write_stream, server.create_initialization_options())
 
 
-def serve(env: ExchangeEnv, mandate: MandateSpec, *, auto_approve: bool = False) -> None:
+def serve(env: BaseEnv, mandate: AnyMandate, *, auto_approve: bool = False) -> None:
     """阻塞运行 stdio MCP server，直至客户端断开（stdin EOF）。"""
     import asyncio
 

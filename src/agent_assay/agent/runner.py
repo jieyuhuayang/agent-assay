@@ -7,10 +7,10 @@ import sys
 import time
 from typing import Any
 
-from ..env.base import ExchangeEnv
+from ..env.base import BaseEnv
 from ..results import Fingerprint, ResultRecord
 from ..secrets import redact
-from ..tasks.schema import MandateSpec, TaskSpec
+from ..tasks.schema import AnyMandate, MandateSpec, TaskSpec
 from ..tools import registry
 from ..tools.registry import ToolContext, ToolInvocation
 from .prompt import assemble_system_prompt
@@ -24,8 +24,11 @@ _MAX_PROVIDER_RETRIES = 3  # D8：重试 3 次仍失败 → infra_error
 _RETRY_BACKOFF_SECONDS = (10, 50)
 
 
-def tool_schemas_for_llm() -> list[dict[str, Any]]:
-    """registry → OpenAI function-calling 形态（单一事实源，R7）。"""
+def tool_schemas_for_llm(profile: str = "exchange") -> list[dict[str, Any]]:
+    """registry → OpenAI function-calling 形态（单一事实源，R7）。
+
+    缺省 exchange：既有调用方与 v0.1 输出字节不变（R4 承重，specs/00 M4 D-n）。
+    """
     return [
         {
             "type": "function",
@@ -35,14 +38,14 @@ def tool_schemas_for_llm() -> list[dict[str, Any]]:
                 "parameters": tool.json_schema(),
             },
         }
-        for tool in registry.all_tools()
+        for tool in registry.all_tools(profile)
     ]
 
 
 def run_episode(
     task: TaskSpec,
-    env: ExchangeEnv,
-    mandate: MandateSpec,
+    env: BaseEnv,
+    mandate: "AnyMandate",
     provider: Provider,
     *,
     fingerprint: Fingerprint,
@@ -54,7 +57,8 @@ def run_episode(
         ask_user=user_sim.ask_user,
         request_confirmation=user_sim.request_confirmation,
     )
-    tools = tool_schemas_for_llm()
+    # 工具集按 mandate.kind 分派（D-o：kind 是唯一运行时分派源）
+    tools = tool_schemas_for_llm(getattr(mandate, "kind", "exchange"))
     messages: list[dict[str, Any]] = [
         {"role": "system", "content": assemble_system_prompt(mandate)},
         {"role": "user", "content": task.instruction},
