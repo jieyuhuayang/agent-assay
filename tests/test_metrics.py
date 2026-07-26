@@ -94,3 +94,15 @@ def test_cost_latency_aggregation():
     # 无 token 采集（scripted）→ null 不硬造 0
     m2 = compute_metrics([row(wall_ms=100)])["cost_latency"]
     assert m2["tokens_total"] is None and m2["tokens_mean"] is None
+
+
+def test_by_family_includes_x():
+    """AC-15h：metrics 层族无关——第四族 x 自动出现在 by_family（零改动的守护）。"""
+    rows = [
+        TaskScore(task_id="X01", family="x", status="done", passed=True),
+        TaskScore(task_id="X02", family="x", status="done", passed=False),
+        TaskScore(task_id="A01", family="a", status="done", passed=True),
+    ]
+    metrics = compute_metrics(rows)
+    assert metrics["task_success_rate"]["by_family"]["x"] == "0.5000"
+    assert metrics["task_success_rate"]["by_family"]["a"] == "1.0000"

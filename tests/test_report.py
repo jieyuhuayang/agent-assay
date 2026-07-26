@@ -88,19 +88,21 @@ def test_leaderboard_reconciles_with_results(tmp_path):
     def tag_expect(tag: str) -> str:
         opportunities = sum(1 for tid, _ in _ROWS if tag in tags[tid])
         return "—" if opportunities == 0 else _q4(0, opportunities)  # 全部行都未违规
-    assert cells[5] == tag_expect("irreversible")      # Unsafe
-    assert cells[6] == tag_expect("overreach_bait")    # Overreach
-    assert cells[7] == tag_expect("legit_reverse")     # Over-refusal
+    assert cells[5] == "—"                             # X 族缺席 → 未测出（v0.2 列）
+    assert cells[6] == tag_expect("irreversible")      # Unsafe
+    assert cells[7] == tag_expect("overreach_bait")    # Overreach
+    assert cells[8] == tag_expect("legit_reverse")     # Over-refusal
 
     # 平均成本：无 tokens → wall 口径；(1000×4+500)/5 = 900.0
-    assert cells[8] == "900.0 ms"
+    assert cells[9] == "900.0 ms"
 
     # 免责声明必须在（AC-12c 的报表侧）
     assert "not investment advice" in text and "非投资建议" in text
 
 
-def test_radar_six_axes_svg(tmp_path):
-    """AC-12b：每模型一张 + 叠加一张，SVG 文本含全部六个轴标签。"""
+def test_radar_seven_axes_svg(tmp_path):
+    """AC-12b/AC-15g：每模型一张 + 叠加一张，SVG 文本含全部七个轴标签（v0.2 加 X success，
+    C safety 更名 Safety——该轴按 tag 不按族）。"""
     run1 = _write_run(tmp_path / "run1", "model-one")
     run2 = _write_run(tmp_path / "run2", "model-two")
     out = tmp_path / "out"
@@ -165,7 +167,7 @@ def test_radar_palette_cycles_beyond_seven():
     import tempfile
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "many.svg"
-        series = [(f"model-{i}", [D("0.5")] * 6) for i in range(9)]
+        series = [(f"model-{i}", [D("0.5")] * len(RADAR_AXES)) for i in range(9)]
         _render_radar(path, series)
         content = path.read_text(encoding="utf-8")
         for i in range(9):

@@ -137,3 +137,123 @@ def test_x402_fixture_kind_dispatch(repo_factory, tmp_path):
     report = validate_repo(root)
     assert not report.ok
     assert any(i.code == "schema" and "x402_bad" in i.file for i in report.issues)
+
+
+def _x402_repo(repo_factory):
+    """在交易所合法仓库上加 x402 fixture/mandate（域测试公用底座）。"""
+    import textwrap
+
+    root = repo_factory()
+
+    def write(path, content):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(textwrap.dedent(content), encoding="utf-8")
+
+    write(root / "fixtures" / "x402_f.yaml", """
+    kind: x402
+    wallet:
+      USDC: {free: "60", locked: "0"}
+    resources:
+      - url: https://reports.example/brief
+        price: "5"
+        pay_to: PAYMOCKMerchantAAA
+        content: fine
+    """)
+    write(root / "mandates" / "x402_m.yaml", """
+    mandate:
+      kind: x402
+      pay_limit_quote: "25"
+      payee_whitelist: [PAYMOCKMerchantAAA]
+      confirmation_policy: |
+        限内免确认。
+      on_violation: refuse_and_explain
+    """)
+    return root, write
+
+
+X_TASK_TEMPLATE = """
+id: X01
+family: x
+title: t
+instruction: i
+env: {env}
+fixture: {fixture}
+mandate: {mandate}
+expected:
+  final_state:
+{final_state}
+  trajectory:
+    - assert: tool_called
+      tool: report
+max_steps: 15
+tags: []
+"""
+
+
+def test_domain_gated_assertion_kinds(repo_factory):
+    """AC-15f：x 族禁交易所专属断言；a/b/c 族禁支付断言（issue code domain-assert）。"""
+    from agent_assay.tasks.validate import validate_repo
+
+    root, write = _x402_repo(repo_factory)
+    # x 任务用 spend_within → domain-assert
+    write(root / "tasks" / "x" / "X01.yaml", X_TASK_TEMPLATE.format(
+        env="mock", fixture="fixtures/x402_f.yaml", mandate="mandates/x402_m.yaml",
+        final_state="    - assert: spend_within\n      limit: \"10\"",
+    ))
+    report = validate_repo(root)
+    assert any(i.code == "domain-assert" and "spend_within" in i.message for i in report.issues)
+
+    # a 任务用 payments_within → domain-assert
+    write(root / "tasks" / "x" / "X01.yaml", X_TASK_TEMPLATE.format(
+        env="mock", fixture="fixtures/x402_f.yaml", mandate="mandates/x402_m.yaml",
+        final_state="    - assert: payments_within",
+    ))
+    write(root / "tasks" / "a" / "A02.yaml", """
+id: A02
+family: a
+title: t
+instruction: i
+env: mock
+fixture: fixtures/f1.yaml
+mandate: mandates/m1.yaml
+expected:
+  final_state:
+    - assert: payments_within
+max_steps: 15
+tags: []
+""")
+    report = validate_repo(root)
+    assert any(
+        i.code == "domain-assert" and "payments_within" in i.message and "A02" in i.file
+        for i in report.issues
+    )
+
+
+def test_family_domain_coherence(repo_factory):
+    """AC-15f：family=x ⇔ fixture/mandate kind=x402 ⇒ env mock；交易所语料零扰。"""
+    from agent_assay.tasks.validate import validate_repo
+
+    root, write = _x402_repo(repo_factory)
+    ok_task = X_TASK_TEMPLATE.format(
+        env="mock", fixture="fixtures/x402_f.yaml", mandate="mandates/x402_m.yaml",
+        final_state="    - assert: payments_within",
+    )
+    write(root / "tasks" / "x" / "X01.yaml", ok_task)
+    report = validate_repo(root)
+    assert report.ok, [i.message for i in report.issues]  # 合规 x 任务 + 既有交易所语料全绿
+
+    # x 任务引用交易所 fixture/mandate → domain
+    write(root / "tasks" / "x" / "X01.yaml", X_TASK_TEMPLATE.format(
+        env="mock", fixture="fixtures/f1.yaml", mandate="mandates/m1.yaml",
+        final_state="    - assert: payments_within",
+    ))
+    report = validate_repo(root)
+    assert sum(1 for i in report.issues if i.code == "domain") == 2  # fixture + mandate 各一条
+
+    # x 任务 env: both → domain
+    write(root / "tasks" / "x" / "X01.yaml", X_TASK_TEMPLATE.format(
+        env="both", fixture="fixtures/x402_f.yaml", mandate="mandates/x402_m.yaml",
+        final_state="    - assert: payments_within",
+    ))
+    report = validate_repo(root)
+    assert any(i.code == "domain" and "env" in i.message for i in report.issues)
