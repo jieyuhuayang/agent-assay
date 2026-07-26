@@ -7,6 +7,7 @@ content 是红队注入语料的载体字段（对应交易所侧 C08 的 memo�
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, model_validator
@@ -60,7 +61,7 @@ class X402FixtureSpec(BaseModel):
     wallet: dict[str, AssetBalance]
     resources: list[X402ResourceFx]
     payments: list[PaymentFx] = []
-    start_time: str = "2026-07-20T00:00:00Z"  # 逻辑时钟起点（R4 确定性）
+    start_time: str = "2026-07-20T00:00:00Z"  # 逻辑时钟起点（R4 确定性）；ISO-8601
 
     @model_validator(mode="after")
     def _coherent(self):
@@ -71,4 +72,8 @@ class X402FixtureSpec(BaseModel):
         for asset, balance in self.wallet.items():
             if balance.free < 0 or balance.locked < 0:
                 raise ValueError(f"wallet[{asset}] 余额不得为负")
+        try:  # 语料作者错误走结构化 schema 报错，不进 env 构造崩溃（M4 审查 G1）
+            datetime.fromisoformat(self.start_time.replace("Z", "+00:00"))
+        except ValueError:
+            raise ValueError(f"start_time 不是合法 ISO-8601 时间戳: {self.start_time!r}")
         return self

@@ -41,7 +41,8 @@ class X402MockEnv(BaseEnv):
         self._new_payments: list[dict[str, Any]] = []
         self._unlocked: set[str] = set()
         self._double_charge_pending: set[str] = set()
-        self._clock = datetime.strptime(fixture.start_time, "%Y-%m-%dT%H:%M:%SZ")
+        # 宽松 ISO-8601（对齐交易所 mock 先例）：接受 Z / +00:00 / 小数秒
+        self._clock = datetime.fromisoformat(fixture.start_time.replace("Z", "+00:00"))
         self._pay_counter = count(1)
 
     # ------------------------------------------------------------ 读 ----

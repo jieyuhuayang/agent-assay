@@ -285,7 +285,8 @@ def _validate_simple_file(
 
         try:
             X402MockEnv(parsed)  # type: ignore[arg-type]
-        except InvariantViolation as exc:
+        except (InvariantViolation, ValueError) as exc:
+            # ValueError：schema 合法但构造期数据错误（如时间戳）→ 结构化 Issue，不崩 validate
             issues.append(
                 Issue(file=_rel(root, path), code="fixture-invariant", message=str(exc))
             )
@@ -297,7 +298,8 @@ def _validate_simple_file(
 
         try:
             MockExchangeEnv(parsed)  # type: ignore[arg-type]
-        except InvariantViolation as exc:
+        except (InvariantViolation, ValueError) as exc:
+            # ValueError：如 mock.start_time 非 ISO-8601（v0.1 遗留洞，M4 审查 G1 封住）
             issues.append(
                 Issue(file=_rel(root, path), code="fixture-invariant", message=str(exc))
             )

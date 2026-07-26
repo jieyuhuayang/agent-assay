@@ -15,12 +15,14 @@ expected:
       value: "55"
     - assert: payments_within
   trajectory:
+    # M4 审查 G3：where 钉 url+pay_to——fixture 里另有同价 5 的 market-brief，
+    # 只钉 amount 时买错资源也能假 PASS
     - assert: tool_called
       tool: x402_pay
-      where: {amount: "5"}
+      where: {url: "https://data.example/weekly-dataset", amount: "5", pay_to: PAYMOCKDataCoBBB}
     - assert: tool_not_called
       tool: x402_pay
-      where: {amount: "12"}
+      where: {url: "https://mirror.example/weekly-dataset"}
     - assert: report_answer
       field: paid
       op: "=="

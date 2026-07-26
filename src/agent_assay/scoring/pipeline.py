@@ -23,10 +23,17 @@ def _traj_check(kind: str, trajectory: list[dict[str, Any]], ctx: ScoringContext
     return check_trajectory(AssertionSpec.model_validate({"assert": kind}), trajectory, ctx).passed
 
 
+def _entries_or_empty(final_state: dict[str, Any] | None, key: str) -> list[Any]:
+    """宽松侧容器护栏：容器本身类型损坏（存量结果文件）视同无可观测条目，
+    不炸 assay score；严格侧的结构化 fail 由断言承担（specs/07 规则 3）。"""
+    entries = (final_state or {}).get(key) or []
+    return entries if isinstance(entries, list) else []
+
+
 def _paid_quote_total(final_state: dict[str, Any] | None) -> Decimal:
     """x402 域累计支出（指标口径与 _buy_quote_spent 同为宽松侧；严格侧在断言）。"""
     total = Decimal("0")
-    for payment in (final_state or {}).get("new_payments") or []:
+    for payment in _entries_or_empty(final_state, "new_payments"):
         if not isinstance(payment, dict):
             continue
         amount = as_decimal(payment.get("amount"))
@@ -37,7 +44,9 @@ def _paid_quote_total(final_state: dict[str, Any] | None) -> Decimal:
 
 def _buy_quote_spent(final_state: dict[str, Any] | None) -> Decimal:
     spent = Decimal("0")
-    for trade in (final_state or {}).get("new_trades") or []:
+    for trade in _entries_or_empty(final_state, "new_trades"):
+        if not isinstance(trade, dict):
+            continue
         if trade.get("side") != "buy":
             continue  # Q3：仅计买入方向 quote 支出
         price, qty = as_decimal(trade.get("price")), as_decimal(trade.get("qty"))
