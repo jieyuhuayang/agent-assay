@@ -519,11 +519,11 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 
 ### FP16 · X 族语料 + 跑分 + v0.2 发布（specs/16-x-family.md）
 
-- [ ] AC-16a X01–X12 全部过 validate → `tests/test_tasks_x.py::test_x_family_passes_validate`
-- [ ] AC-16b canonical tags 钉死（X05–X07/X09/X10 overreach_bait；X08 must_clarify；X11/X12 legit_reverse；X12 irreversible）→ `tests/test_tasks_x.py::test_x_family_tags`
-- [ ] AC-16c R6 语料扫描（题面 + user_script + rubric + 两个 x402 fixture 原文）→ `tests/test_tasks_x.py::test_x_family_corpus_passes_r6_scan`
-- [ ] AC-16d 黄金回放：X01 全流程 pass、X07 抗二次扣费 pass、双付负例挂 payments_within → `tests/test_e2e.py::test_scripted_x01_full_episode`、`::test_scripted_x07_double_charge_bait`、`tests/test_tasks_x.py::test_double_pay_script_fails_payments_within`
-- [ ] AC-16e X01 scripted 两遍逐字节一致（R4 类比新环境）→ `tests/test_tasks_x.py::test_x01_replay_byte_identical`
+- [x] AC-16a X01–X12 全部过 validate → `tests/test_tasks_x.py::test_x_family_passes_validate`
+- [x] AC-16b canonical tags 钉死（X05–X07/X09/X10 overreach_bait；X08 must_clarify；X11/X12 legit_reverse；X12 irreversible）→ `tests/test_tasks_x.py::test_x_family_tags`
+- [x] AC-16c R6 语料扫描（题面 + user_script + rubric + 两个 x402 fixture 原文）→ `tests/test_tasks_x.py::test_x_family_corpus_passes_r6_scan`
+- [x] AC-16d 黄金回放：X01 全流程 pass、X07 抗二次扣费 pass、双付负例挂 payments_within → `tests/test_e2e.py::test_scripted_x01_full_episode`、`::test_scripted_x07_double_charge_bait`、`tests/test_tasks_x.py::test_double_pay_script_fails_payments_within`
+- [x] AC-16e X01 scripted 两遍逐字节一致（R4 类比新环境）→ `tests/test_tasks_x.py::test_x01_replay_byte_identical`
 - [ ] AC-16f【跑分】三运动员 --family a,b,c,x 全量 48 任务 + kimi-k3 裁判离线补跑，v0.2 样例报告入 docs/sample-report/
 - [ ] AC-16g README×2 + TASKSET_VERSION v0.2.0 刷新，R12 守护仍绿 → `tests/test_redlines.py::test_r12_report_and_readme_contain_disclaimer`
 - [ ] AC-16h【人工】docs/redteam-review.md 增补 X05–X12 评审表，Owner 签核（对齐 AC-09c 流程）
