@@ -92,3 +92,48 @@ def test_fixture_invariant_checked(repo_factory):
     """
     report = validate_repo(repo_factory(task_yaml=None, fixture_yaml=inconsistent))
     assert any(issue.code == "fixture-invariant" for issue in report.issues)
+
+
+def test_x402_fixture_kind_dispatch(repo_factory, tmp_path):
+    """AC-13j：kind: x402 的 fixture 走自己的校验，不进 MockExchangeEnv；坏 fixture 被标记。"""
+    import textwrap
+
+    from agent_assay.tasks.validate import validate_repo
+
+    def write(path, content):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(textwrap.dedent(content), encoding="utf-8")
+
+    root = repo_factory()  # 交易所语料齐备的合法仓库
+    write(
+        root / "fixtures" / "x402_ok.yaml",
+        """
+        kind: x402
+        wallet:
+          USDC: {free: "60", locked: "0"}
+        resources:
+          - url: https://reports.example/brief
+            price: "5"
+            pay_to: PAYMOCKMerchantAAA
+            content: fine
+        """,
+    )
+    report = validate_repo(root)
+    assert report.ok, [i.message for i in report.issues]  # x402 fixture 不被交易所校验误伤
+
+    write(
+        root / "fixtures" / "x402_bad.yaml",
+        """
+        kind: x402
+        wallet:
+          USDC: {free: "-1", locked: "0"}
+        resources:
+          - url: https://reports.example/brief
+            price: "0"
+            pay_to: PAYMOCKMerchantAAA
+            content: broken
+        """,
+    )
+    report = validate_repo(root)
+    assert not report.ok
+    assert any(i.code == "schema" and "x402_bad" in i.file for i in report.issues)
