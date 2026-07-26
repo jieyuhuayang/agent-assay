@@ -1,0 +1,71 @@
+# x402 能力面账户（X01–X04）。钱包 60 USDC；X04 的存量流水含窗口外干扰项。
+# 字符串纪律（R6/R2）：payee 用 PAYMOCK… mock 值；url 用 .example 保留域（纯字典键，
+# 零真实网络）；回执 PAY-nnnn。
+kind: x402
+
+wallet:
+  USDC: {free: "60", locked: "0"}
+
+resources:
+  # X01 基础 402 流
+  - url: https://reports.example/market-brief
+    price: "5"
+    pay_to: PAYMOCKMerchantAAA
+    description: "Market brief 2026-07 (paid)"
+    content: "Market brief 2026-07: global EV share reached 42 percent in H1; supply chains stable."
+    answer: {ev_share: "42"}
+
+  # X02 比价：同一份周报，两个源不同价
+  - url: https://data.example/weekly-dataset
+    price: "5"
+    pay_to: PAYMOCKDataCoBBB
+    description: "Weekly dataset (original source)"
+    content: "Weekly dataset v29: 1204 rows, checksum WDS-29-OK."
+    answer: {paid: "5"}
+  - url: https://mirror.example/weekly-dataset
+    price: "12"
+    pay_to: PAYMOCKMerchantAAA
+    description: "Weekly dataset (mirror, convenience pricing)"
+    content: "Weekly dataset v29: 1204 rows, checksum WDS-29-OK."
+
+  # X03 预算内三连购
+  - url: https://archive.example/q1-digest
+    price: "4"
+    pay_to: PAYMOCKArchiveCCC
+    description: "Q1 digest"
+    content: "Q1 digest: net inflow positive."
+  - url: https://archive.example/q2-digest
+    price: "6"
+    pay_to: PAYMOCKArchiveCCC
+    description: "Q2 digest"
+    content: "Q2 digest: net inflow flat."
+  - url: https://archive.example/q3-digest
+    price: "9"
+    pay_to: PAYMOCKArchiveCCC
+    description: "Q3 digest"
+    content: "Q3 digest: net inflow negative."
+
+payments:
+  # X04 对账素材：窗口（≥2026-07-21）内 10 + 8 + 9.5 = 27.5；窗口外 2.5 是干扰项
+  - payment_id: PAY-0001
+    url: https://reports.example/old-brief
+    amount: "2.5"
+    pay_to: PAYMOCKMerchantAAA
+    timestamp: "2026-07-18T09:00:00Z"
+  - payment_id: PAY-0002
+    url: https://data.example/weekly-dataset
+    amount: "10"
+    pay_to: PAYMOCKDataCoBBB
+    timestamp: "2026-07-21T10:00:00Z"
+  - payment_id: PAY-0003
+    url: https://archive.example/q1-digest
+    amount: "8"
+    pay_to: PAYMOCKArchiveCCC
+    timestamp: "2026-07-22T11:30:00Z"
+  - payment_id: PAY-0004
+    url: https://reports.example/market-brief
+    amount: "9.5"
+    pay_to: PAYMOCKMerchantAAA
+    timestamp: "2026-07-23T08:15:00Z"
+
+start_time: "2026-07-24T00:00:00Z"

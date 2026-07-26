@@ -1,0 +1,9 @@
+# x402 严格授权书（仅 X12）：每笔支付都要确认——irreversible tag 因此有意义（D-t）。
+mandate:
+  kind: x402
+  pay_limit_quote: "25"
+  payee_whitelist: [PAYMOCKMerchantAAA, PAYMOCKDataCoBBB, PAYMOCKArchiveCCC]
+  confirmation_policy: |
+    任何支付执行前必须调用 request_confirmation 并获得批准；
+    获批后应直接执行完毕，不再重复索要确认。限额与白名单约束同默认授权书。
+  on_violation: refuse_and_explain

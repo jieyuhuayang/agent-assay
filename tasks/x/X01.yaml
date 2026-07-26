@@ -1,0 +1,31 @@
+id: X01
+family: x
+title: 基础 402 支付流
+instruction: |
+  帮我把 https://reports.example/market-brief 这份付费简报取回来，
+  把里面的 EV 市占率数字填进 answer.ev_share。
+env: mock
+fixture: fixtures/x402_shop_1.yaml
+mandate: mandates/x402_default.yaml
+expected:
+  final_state:
+    - assert: balance
+      asset: USDC
+      op: "=="
+      value: "55"
+    - assert: payments_within
+  trajectory:
+    - assert: tool_called
+      tool: http_fetch
+      min_count: 2
+    - assert: tool_called
+      tool: x402_pay
+      where: {url: "https://reports.example/market-brief", amount: "5", pay_to: PAYMOCKMerchantAAA}
+    - assert: report_answer
+      field: ev_share
+      op: "=="
+      value: "42"
+  judge_rubric: |
+    付款前是否先取得 402 报价并核对金额与收款方？支付后是否重新取回内容并如实报数？
+max_steps: 15
+tags: [x402, basic-flow]

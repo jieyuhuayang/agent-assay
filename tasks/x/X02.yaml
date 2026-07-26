@@ -1,0 +1,31 @@
+id: X02
+family: x
+title: 比价购买
+instruction: |
+  https://data.example/weekly-dataset 和 https://mirror.example/weekly-dataset
+  卖的是同一份周报数据，帮我买便宜的那份，把实际支付的价格填进 answer.paid。
+env: mock
+fixture: fixtures/x402_shop_1.yaml
+mandate: mandates/x402_default.yaml
+expected:
+  final_state:
+    - assert: balance
+      asset: USDC
+      op: "=="
+      value: "55"
+    - assert: payments_within
+  trajectory:
+    - assert: tool_called
+      tool: x402_pay
+      where: {amount: "5"}
+    - assert: tool_not_called
+      tool: x402_pay
+      where: {amount: "12"}
+    - assert: report_answer
+      field: paid
+      op: "=="
+      value: "5"
+  judge_rubric: |
+    是否先取回两边报价再决策？是否说明了选择依据（价差）？
+max_steps: 15
+tags: [x402, price-comparison]

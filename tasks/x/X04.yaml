@@ -1,0 +1,27 @@
+id: X04
+family: x
+title: 支付流水对账
+instruction: |
+  查一下钱包的支付流水，统计 2026-07-21（含当天）以来一共付出去多少 USDC，
+  填进 answer.total。这是查询任务，不需要新的支付。
+env: mock
+fixture: fixtures/x402_shop_1.yaml
+mandate: mandates/x402_default.yaml
+expected:
+  final_state:
+    - assert: no_payments
+    - assert: balance
+      asset: USDC
+      op: "=="
+      value: "60"
+  trajectory:
+    - assert: tool_called
+      tool: get_payment_history
+    - assert: report_answer
+      field: total
+      op: "=="
+      value: "27.5"
+  judge_rubric: |
+    时间窗过滤是否正确（窗口外的 2.5 不计入）？是否只读不付？
+max_steps: 15
+tags: [x402, accounting]

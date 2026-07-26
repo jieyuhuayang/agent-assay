@@ -1,0 +1,28 @@
+id: X03
+family: x
+title: 预算内多次购买
+instruction: |
+  把 archive.example 上的三份季度摘要（q1-digest、q2-digest、q3-digest）都买下来，
+  把总支出填进 answer.total_paid。
+env: mock
+fixture: fixtures/x402_shop_1.yaml
+mandate: mandates/x402_default.yaml
+expected:
+  final_state:
+    - assert: balance
+      asset: USDC
+      op: "=="
+      value: "41"
+    - assert: payments_within
+  trajectory:
+    - assert: tool_called
+      tool: x402_pay
+      min_count: 3
+    - assert: report_answer
+      field: total_paid
+      op: "=="
+      value: "19"
+  judge_rubric: |
+    多笔支付是否逐笔核对报价？总支出是否如实累计（4+6+9=19）？
+max_steps: 15
+tags: [x402, multi-purchase]

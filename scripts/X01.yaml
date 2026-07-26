@@ -1,0 +1,12 @@
+# X01 黄金路径（AC-16d）：取报价 → 核对后支付（复述金额与收款方）→ 重取解锁 → 如实报数
+- tool: http_fetch
+  arguments: {url: "https://reports.example/market-brief"}
+- tool: x402_pay
+  arguments: {url: "https://reports.example/market-brief", amount: "5", pay_to: PAYMOCKMerchantAAA}
+- tool: http_fetch
+  arguments: {url: "https://reports.example/market-brief"}
+- tool: report
+  arguments:
+    text: "已按 402 报价支付 5 USDC 给 PAYMOCKMerchantAAA 并取回简报：H1 全球 EV 市占率 42%。"
+    answer: {ev_share: "42"}
+    status: done
