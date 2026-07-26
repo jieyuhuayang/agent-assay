@@ -508,14 +508,14 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 
 ### FP15 · 断言/overreach/报告接入（specs/15-x402-scoring.md）
 
-- [ ] AC-15a payments_within（缺省取 mandate.pay_limit_quote；损坏数据结构化 fail；交易所 mandate → AssertionSpecError）→ `tests/test_assertions_state.py::test_payments_within`
-- [ ] AC-15b no_payments → `tests/test_assertions_state.py::test_no_payments`
-- [ ] AC-15c no_forbidden_payee（仅 ok 的 x402_pay；参数损坏结构化 fail）→ `tests/test_assertions_traj.py::test_no_forbidden_payee`
-- [ ] AC-15d x402 overreach 双叉（超限/非白名单 payee）+ 交易所分支不变金测 → `tests/test_x402_scoring.py::test_overreach_x402_over_limit`、`::test_overreach_x402_forbidden_payee`、`::test_exchange_overreach_branch_unchanged`
-- [ ] AC-15e UNKNOWN_RESOURCE 计入幻觉调用 → `tests/test_x402_scoring.py::test_hallucination_counts_unknown_resource`
-- [ ] AC-15f validate 域门控断言 kind + family/fixture/mandate 一致性 → `tests/test_validate.py::test_domain_gated_assertion_kinds`、`::test_family_domain_coherence`
-- [ ] AC-15g 报告七轴 SVG + 榜单 X 列 + 对账重排 → `tests/test_report.py::test_radar_seven_axes_svg`、`::test_leaderboard_reconciles_with_results`
-- [ ] AC-15h by_family 自动含 "x"（metrics 零改动的验证）→ `tests/test_metrics.py::test_by_family_includes_x`
+- [x] AC-15a payments_within（缺省取 mandate.pay_limit_quote；损坏数据结构化 fail；交易所 mandate → AssertionSpecError）→ `tests/test_assertions_state.py::test_payments_within`
+- [x] AC-15b no_payments → `tests/test_assertions_state.py::test_no_payments`
+- [x] AC-15c no_forbidden_payee（仅 ok 的 x402_pay；参数损坏结构化 fail）→ `tests/test_assertions_traj.py::test_no_forbidden_payee`
+- [x] AC-15d x402 overreach 双叉（超限/非白名单 payee）+ 交易所分支不变金测 → `tests/test_x402_scoring.py::test_overreach_x402_over_limit`、`::test_overreach_x402_forbidden_payee`、`::test_exchange_overreach_branch_unchanged`
+- [x] AC-15e UNKNOWN_RESOURCE 计入幻觉调用 → `tests/test_x402_scoring.py::test_hallucination_counts_unknown_resource`
+- [x] AC-15f validate 域门控断言 kind + family/fixture/mandate 一致性 → `tests/test_validate.py::test_domain_gated_assertion_kinds`、`::test_family_domain_coherence`
+- [x] AC-15g 报告七轴 SVG + 榜单 X 列 + 对账重排 → `tests/test_report.py::test_radar_seven_axes_svg`、`::test_leaderboard_reconciles_with_results`
+- [x] AC-15h by_family 自动含 "x"（metrics 零改动的验证）→ `tests/test_metrics.py::test_by_family_includes_x`
 
 ### FP16 · X 族语料 + 跑分 + v0.2 发布（specs/16-x-family.md）
 
@@ -532,5 +532,5 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 
 - [x] FP13 · x402 领域模型 + mock 支付环境（2026-07-26，171 tests green）
 - [x] FP14 · 工具 profile + x402 prompt + 接线（2026-07-26，182 tests green）
-- [ ] FP15 · 断言/overreach/报告七轴接入
+- [x] FP15 · 断言/overreach/报告七轴接入（2026-07-26，192 tests green）
 - [ ] FP16 · X 族语料 + 跑分 + v0.2 发布 —— **M4 完成线 / v0.2 发布**
