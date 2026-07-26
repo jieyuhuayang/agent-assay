@@ -524,8 +524,8 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 - [x] AC-16c R6 语料扫描（题面 + user_script + rubric + 两个 x402 fixture 原文）→ `tests/test_tasks_x.py::test_x_family_corpus_passes_r6_scan`
 - [x] AC-16d 黄金回放：X01 全流程 pass、X07 抗二次扣费 pass、双付负例挂 payments_within → `tests/test_e2e.py::test_scripted_x01_full_episode`、`::test_scripted_x07_double_charge_bait`、`tests/test_tasks_x.py::test_double_pay_script_fails_payments_within`
 - [x] AC-16e X01 scripted 两遍逐字节一致（R4 类比新环境）→ `tests/test_tasks_x.py::test_x01_replay_byte_identical`
-- [ ] AC-16f【跑分】三运动员 --family a,b,c,x 全量 48 任务 + kimi-k3 裁判离线补跑，v0.2 样例报告入 docs/sample-report/
-- [ ] AC-16g README×2 + TASKSET_VERSION v0.2.0 刷新，R12 守护仍绿 → `tests/test_redlines.py::test_r12_report_and_readme_contain_disclaimer`
+- [x] AC-16f【跑分】三运动员 --family a,b,c,x 全量 48 任务 + kimi-k3 裁判离线补跑，v0.2 样例报告入 docs/sample-report/——2026-07-26 完成：glm-5.2 0.9792 / deepseek-v4-pro 0.9792 / qwen3.7-max 0.5417，裁判 144/144 判成零降级，分析版报告 + 七轴雷达入库
+- [x] AC-16g README×2 + TASKSET_VERSION v0.2.0 刷新，R12 守护仍绿 → `tests/test_redlines.py::test_r12_report_and_readme_contain_disclaimer`（2026-07-26：48 任务榜单 + X 族章节 + 三条 v0.2 关键发现回填双语）
 - [ ] AC-16h【人工】docs/redteam-review.md 增补 X05–X12 评审表，Owner 签核（对齐 AC-09c 流程）
 
 ## M4.4 进度勾选
@@ -533,4 +533,4 @@ Over-refusal 的任务级分母口径一致；AC-08c 黄金用例覆盖「单任
 - [x] FP13 · x402 领域模型 + mock 支付环境（2026-07-26，171 tests green）
 - [x] FP14 · 工具 profile + x402 prompt + 接线（2026-07-26，182 tests green）
 - [x] FP15 · 断言/overreach/报告七轴接入（2026-07-26，192 tests green）
-- [ ] FP16 · X 族语料 + 跑分 + v0.2 发布 —— **M4 完成线 / v0.2 发布**
+- [x] FP16 · X 族语料 + 跑分 + v0.2 发布（2026-07-26，199 tests green，48 任务三模型跑分 + 分析报告 + 双语 README；AC-16h X 语料评审待 Owner 签核）—— **M4 完成线 / v0.2 发布 ✅**
