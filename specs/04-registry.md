@@ -10,7 +10,9 @@
   仓库内不允许出现第二份工具 schema（tripwire 测试 `test_r7_no_tool_schema_outside_registry`）。
 - **双层校验（第 5 节）**：
   - schema 层 = pydantic 校验（类型/枚举/必填/extra=forbid 拒幻觉参数），失败 →
-    `error_kind="schema_error"`，`error_code="SCHEMA_VALIDATION"`（未知工具 `UNKNOWN_TOOL`）；
+    `error_kind="schema_error"`，`error_code="SCHEMA_VALIDATION"`（未知工具 `UNKNOWN_TOOL`；
+    v0.2 起「未知」按调用方 profile 判定——名字在全集但不在当前 profile 同记
+    `UNKNOWN_TOOL`，见 specs/14 §1 G4）；
   - 语义层 = env 抛出的 `ExchangeError` → `error_kind="semantic_error"`，错误码原样透传
     （LOT_SIZE 等），agent 可读错误自我修正；每次记入 `ToolInvocation`（轨迹与指标素材）。
 - **不可逆元数据（R8）**：只在 `ToolDef.irreversible_fn` 定义——place_order 按参数动态

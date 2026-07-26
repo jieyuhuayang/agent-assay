@@ -9,7 +9,11 @@
   定义零改动；新工具显式给 `{"x402"}`；ask_user / request_confirmation / report 改为
   `{"exchange", "x402"}`（共享）。
 - `all_tools(profile: str = "exchange")`：**默认值是 R4 承重墙**——runner / MCP / 既有
-  测试零改动字节一致。`TOOLS` 名字典仍收录全集（名字唯一，execute_tool 不变）。
+  测试零改动字节一致。`TOOLS` 名字典仍收录全集（名字唯一）。
+- `execute_tool(..., profile: str | None = None)`（M4 审查 G4，Owner 定案 2026-07-26）：
+  profile 给定时，名字在全集但不在当前 profile → `UNKNOWN_TOOL/schema_error`——
+  幻觉另一域的真实工具名与幻觉表外名字同罪同罚（specs/04 幻觉门延伸到执行面）；
+  runner / MCP 按 mandate.kind 传入；缺省 None 保持全集分派（直接调用方字节不变）。
 - 新 ToolDef **插在 withdraw 与 ask_user 之间**：exchange 过滤后顺序逐字节不变；
   x402 profile 顺序 = get_wallet, get_payment_history, http_fetch, x402_pay,
   ask_user, request_confirmation, report（7 个）。

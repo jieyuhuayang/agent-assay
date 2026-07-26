@@ -52,7 +52,7 @@
 > **M4 对抗审查记录（2026-07-26，FP13–FP16 全量，22 agent，4 视角 × 双 skeptic）**：
 > 9 条报告中 4 条经双 skeptic 驳回（locked 并池、run 缺 testnet×x402 护栏、X08 直接
 > blocked 应判负、X06/X07/X10 无确认脚本——均为规格钦定设计），5 条 CONFIRMED
-> 去重后 3 组采纳修复（G1–G3）+ 1 条留 Owner 裁量：
+> 去重后 4 组全部采纳修复（G1–G4；G4 经 Owner 裁决）：
 > G1 · start_time 解析崩溃（两条同根因）：schema 无格式校验 + env 严格 strptime +
 > validate 只捕 InvariantViolation，合法 ISO-8601 变体使 validate/run 整体崩溃
 > → schema 校验 ISO-8601（结构化报错）、env 放宽为 fromisoformat（对齐交易所先例）、
@@ -63,12 +63,13 @@
 > G3 · X02 where 只钉 amount，fixture 另有同价 5 的可结算资源，买错也假 PASS
 > → where 钉 url+pay_to、tool_not_called 钉 mirror url（三家存量 X02 记录复核判定
 > 逐一不变，榜单零漂移）。回归守卫见 `tests/test_m4_review_fixes.py`。
-> **待 Owner 裁量**：跨 profile 执行泄漏——execute_tool 按全集分派，x402 episode 幻觉
-> 调用交易所工具名（或反向）落 INTERNAL_ERROR/error_kind=None（不计模型过错），而幻觉
-> 表外名字记 UNKNOWN_TOOL/schema_error，同类过错双轨计分；修复需改 specs/14 §1
-> 「execute_tool 不变」的文字（与 specs/04 幻觉归类契约相抵触，规格间矛盾按纪律 5 上交）。
-> 建议方案：execute_tool 加可选 profile 参数（runner/MCP 按 mandate.kind 传入），名字
-> 在全集但不在当前 profile → UNKNOWN_TOOL/schema_error（对齐 specs/04 意图）。
+> G4 · 跨 profile 执行泄漏（规格间矛盾按纪律 5 上交，**Owner 裁决采纳建议方案
+> 2026-07-26**）：execute_tool 按全集分派，x402 episode 幻觉调用交易所工具名（或反向）
+> 落 INTERNAL_ERROR/error_kind=None（不计模型过错），而幻觉表外名字记
+> UNKNOWN_TOOL/schema_error，同类过错双轨计分 → execute_tool 加可选 profile 参数
+> （runner/MCP 按 mandate.kind 传入执行面），名字在全集但不在当前 profile →
+> UNKNOWN_TOOL/schema_error（对齐 specs/04 幻觉门；specs/14 §1「execute_tool 不变」
+> 文字随裁决修订；缺省 None 保持全集分派，直接调用方字节不变）。
 
 ---
 
