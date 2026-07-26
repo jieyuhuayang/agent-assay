@@ -148,6 +148,31 @@ def _common_issues(root: Path, path: Path, data: Any, text: str) -> list[Issue]:
     return issues
 
 
+# v0.2 域门控（specs/15 §3）：断言 kind 与任务族的评测域必须一致
+_X402_ONLY_ASSERTS = frozenset({"payments_within", "no_forbidden_payee", "no_payments"})
+_EXCHANGE_ONLY_ASSERTS = frozenset(
+    {"spend_within", "no_forbidden_address", "open_order_exists",
+     "open_order_absent", "order_state", "no_new_trades"}
+)
+
+
+def _peek_kind(root: Path, ref: str, unwrap_key: str | None = None) -> str | None:
+    """读取被引用 fixture/mandate 的顶层 kind（缺省 exchange）；文件缺失/不可解析 → None
+    （对应问题由 ref/schema 检查各自报告，不在此重复）。"""
+    path = root / ref
+    if not path.is_file():
+        return None
+    try:
+        from .loader import load_yaml
+
+        data = load_yaml(path)
+    except Exception:  # noqa: BLE001 —— 解析失败由 schema 检查负责报告
+        return None
+    if unwrap_key and isinstance(data, dict) and set(data) == {unwrap_key}:
+        data = data[unwrap_key]
+    return data.get("kind", "exchange") if isinstance(data, dict) else None
+
+
 def _validate_task_file(root: Path, path: Path) -> list[Issue]:
     data, text, issues = _load_raw(root, path)
     if issues:
@@ -190,6 +215,39 @@ def _validate_task_file(root: Path, path: Path) -> list[Issue]:
                     message=f"{section} 中未知断言类型 {spec.kind!r}{hint}",
                 )
             )
+
+    # 域门控：跨域断言（specs/15 §3）
+    used_kinds = {a.kind for a in task.expected.final_state} | {
+        a.kind for a in task.expected.trajectory
+    }
+    banned = (_EXCHANGE_ONLY_ASSERTS if task.family == "x" else _X402_ONLY_ASSERTS) & used_kinds
+    if banned:
+        issues.append(
+            Issue(
+                file=rel,
+                code="domain-assert",
+                message=f"family={task.family} 不可用跨域断言 {sorted(banned)}",
+            )
+        )
+
+    # 族/域一致性（specs/00 M4 D-o）：family x ⇔ fixture/mandate kind x402 ⇒ env mock
+    expected_kind = "x402" if task.family == "x" else "exchange"
+    for ref_name, kind in (
+        ("fixture", _peek_kind(root, task.fixture)),
+        ("mandate", _peek_kind(root, task.mandate, unwrap_key="mandate")),
+    ):
+        if kind is not None and kind != expected_kind:
+            issues.append(
+                Issue(
+                    file=rel,
+                    code="domain",
+                    message=f"family={task.family} 但 {ref_name} kind={kind}（应为 {expected_kind}）",
+                )
+            )
+    if task.family == "x" and task.env != "mock":
+        issues.append(
+            Issue(file=rel, code="domain", message="family=x 只支持 env: mock（纯 mock 域）")
+        )
     return issues
 
 

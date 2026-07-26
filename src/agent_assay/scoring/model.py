@@ -14,7 +14,7 @@ from typing import Any, Literal, Mapping, TypeVar
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from ..env.fixture import SymbolRulesFx
-from ..tasks.schema import AssertionSpec, MandateSpec
+from ..tasks.schema import AnyMandate, AssertionSpec
 
 
 class AssertionSpecError(ValueError):
@@ -23,7 +23,7 @@ class AssertionSpecError(ValueError):
 
 @dataclass(frozen=True)
 class ScoringContext:
-    mandate: MandateSpec
+    mandate: AnyMandate
     rules: Mapping[str, SymbolRulesFx] | None = None  # 仅 qty_step_aligned 需要
 
 

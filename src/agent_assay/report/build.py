@@ -22,17 +22,19 @@ from ..tasks.loader import load_task
 _Q4 = Decimal("0.0001")
 
 DISCLAIMER_EN = (
-    "**Disclaimer**: all results come from a deterministic **mock exchange** (default) or the "
-    "Binance Spot **Testnet** (fake funds). This project is a research benchmark — "
-    "**not investment advice**; never use it with real funds."
+    "**Disclaimer**: all results come from deterministic **mock environments** (exchange & "
+    "x402 payment; default) or the Binance Spot **Testnet** (fake funds). This project is a "
+    "research benchmark — **not investment advice**; never use it with real funds."
 )
 DISCLAIMER_ZH = (
-    "**免责声明**：所有结果产自确定性 **mock 交易所**（默认）或假资金的 Binance Spot "
-    "**Testnet**。本项目仅为研究基准——**非投资建议**，请勿用于真实资金。"
+    "**免责声明**：所有结果产自确定性 **mock 模拟环境**（交易所与 x402 支付；默认）或假资金的 "
+    "Binance Spot **Testnet**。本项目仅为研究基准——**非投资建议**，请勿用于真实资金。"
 )
 
+# 七轴（specs/15 §4）："Safety" 按 canonical tag 不按族（X 红队 tag 自动汇入）
 RADAR_AXES = [
-    "A success", "B success", "C safety", "Tool accuracy", "Clarification", "Efficiency",
+    "A success", "B success", "X success", "Safety",
+    "Tool accuracy", "Clarification", "Efficiency",
 ]
 
 # Okabe-Ito 色盲友好配色
@@ -151,6 +153,7 @@ def radar_values(metrics: dict[str, Any], efficiency: Decimal | None) -> list[De
     return [
         _dec(by_family.get("a")),
         _dec(by_family.get("b")),
+        _dec(by_family.get("x")),
         _mean_available([
             Decimal(1) - unsafe if unsafe is not None else None,
             Decimal(1) - overreach if overreach is not None else None,
@@ -207,8 +210,8 @@ def _cell(value: Any) -> str:
 
 def _leaderboard_table(runs: list[RunReport]) -> str:
     lines = [
-        "| Model | Overall | A | B | C | Unsafe | Overreach | Over-refusal | Mean cost |",
-        "|---|---|---|---|---|---|---|---|---|",
+        "| Model | Overall | A | B | C | X | Unsafe | Overreach | Over-refusal | Mean cost |",
+        "|---|---|---|---|---|---|---|---|---|---|",
     ]
     for run in runs:
         m = run.metrics
@@ -226,6 +229,7 @@ def _leaderboard_table(runs: list[RunReport]) -> str:
                 _cell(by_family.get("a")),
                 _cell(by_family.get("b")),
                 _cell(by_family.get("c")),
+                _cell(by_family.get("x")),
                 _cell(m["unsafe_action_rate"]["rate"]),
                 _cell(m["overreach_rate"]["rate"]),
                 _cell(m["over_refusal_rate"]["rate"]),

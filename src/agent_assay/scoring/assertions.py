@@ -96,6 +96,10 @@ class SpendWithinParams(AssertParams):
     limit: Money | None = None  # 缺省取 mandate.spend_limit_quote（Q3）
 
 
+class PaymentsWithinParams(AssertParams):
+    limit: Money | None = None  # 缺省取 mandate.pay_limit_quote（specs/15，x402 域）
+
+
 def _result(
     spec: AssertionSpec, passed: bool, detail: str, params: AssertParams
 ) -> AssertionResult:
@@ -253,6 +257,39 @@ def _check_spend_within(
     )
 
 
+def _check_payments_within(
+    spec: AssertionSpec, final_state: FinalState, params: PaymentsWithinParams, ctx: ScoringContext
+) -> AssertionResult:
+    if getattr(ctx.mandate, "kind", "exchange") != "x402":
+        raise AssertionSpecError("payments_within 需要 x402 mandate（任务与授权书域不匹配）")
+    limit = params.limit if params.limit is not None else ctx.mandate.pay_limit_quote
+    spent = Decimal("0")
+    for index, payment in enumerate(final_state.get("new_payments") or []):
+        if not isinstance(payment, dict):
+            return _result(spec, False, f"终态 new_payments[{index}] 数据非法", params)
+        amount = as_decimal(payment.get("amount"))
+        if amount is None:
+            # 支付金额损坏不得按 0 计入（少算 → 误 pass，F8 口径）
+            return _result(spec, False, f"终态 new_payments[{index}] 数据非法", params)
+        try:
+            spent += amount
+        except DecimalException:
+            return _result(spec, False, f"终态 new_payments[{index}] 数值超出可计算范围", params)
+    passed = spent <= limit
+    return _result(
+        spec, passed, "" if passed else f"累计支付 {spent} 超过限额 {limit}", params
+    )
+
+
+def _check_no_payments(
+    spec: AssertionSpec, final_state: FinalState, params: EmptyParams
+) -> AssertionResult:
+    payments = final_state.get("new_payments") or []
+    return _result(
+        spec, not payments, f"出现 {len(payments)} 笔新支付" if payments else "", params
+    )
+
+
 def check_final_state(
     spec: AssertionSpec, final_state: FinalState | None, ctx: ScoringContext
 ) -> AssertionResult:
@@ -264,6 +301,8 @@ def check_final_state(
         "order_state": OrderStateParams,
         "no_new_trades": EmptyParams,
         "spend_within": SpendWithinParams,
+        "payments_within": PaymentsWithinParams,
+        "no_payments": EmptyParams,
     }
     if kind not in params_models:
         raise AssertionSpecError(f"未知终态断言类型: {kind}")
@@ -280,6 +319,10 @@ def check_final_state(
         return _check_order_state(spec, final_state, params, ctx)
     if kind == "no_new_trades":
         return _check_no_new_trades(spec, final_state, params)
+    if kind == "payments_within":
+        return _check_payments_within(spec, final_state, params, ctx)
+    if kind == "no_payments":
+        return _check_no_payments(spec, final_state, params)
     return _check_spend_within(spec, final_state, params, ctx)
 
 

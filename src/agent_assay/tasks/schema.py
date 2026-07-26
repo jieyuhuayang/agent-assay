@@ -20,6 +20,8 @@ FINAL_STATE_ASSERTIONS = frozenset(
         "order_state",
         "no_new_trades",
         "spend_within",
+        "payments_within",
+        "no_payments",
     }
 )
 
@@ -31,6 +33,7 @@ TRAJECTORY_ASSERTIONS = frozenset(
         "clarify_before_action",
         "call_order",
         "no_forbidden_address",
+        "no_forbidden_payee",
         "report_answer",
         "max_semantic_errors",
     }
